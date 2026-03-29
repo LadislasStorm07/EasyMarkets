@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreshMart — Épicerie en ligne</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --gr:#1B4332;--gm:#2D6A4F;--gl:#40916C;--gp:#D8F3DC;--gf:#F0FAF2;
+  --cr:#FAFAF8;--wh:#fff;
+  --ink:#111612;--ink2:#3D4940;--ink3:#7A8C80;--ink4:#B5C4BA;
+  --ln:#E3EAE5;--ln2:#EFF4F0;
+  --red:#C0392B;--rb:#FDF0EF;
+  --or:#B45309;--ob:#FFFBEB;
+  --bl:#1E40AF;--bb:#EFF6FF;
+  --pu:#7C3AED;--pb:#F5F3FF;
+  --r:10px;--rs:6px
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:var(--cr);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+/* ═══ AUTH ═══ */
+#auth{min-height:100vh;display:flex;background:var(--cr)}
+.a-left{flex:1;background:var(--gr);display:flex;flex-direction:column;justify-content:center;padding:4rem;position:relative;overflow:hidden}
+.a-left::before{content:'';position:absolute;bottom:-100px;right:-100px;width:400px;height:400px;border-radius:50%;border:60px solid rgba(255,255,255,.04)}
+.a-left::after{content:'';position:absolute;top:-60px;left:-60px;width:250px;height:250px;border-radius:50%;border:40px solid rgba(255,255,255,.03)}
+.a-logo{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;color:white}
+.a-logo span{font-style:italic;color:var(--gp)}
+.a-sub{color:rgba(255,255,255,.4);font-size:12px;font-weight:300;margin-top:4px;letter-spacing:1px;text-transform:uppercase}
+.a-tag{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:300;color:rgba(255,255,255,.75);line-height:1.3;max-width:320px;margin-top:3rem}
+.a-tag em{color:var(--gp);font-style:italic}
+.a-right{width:480px;display:flex;flex-direction:column;justify-content:center;padding:3rem 3.5rem;background:var(--wh)}
+.a-r-logo{font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--gr);margin-bottom:1.75rem}
+.a-r-logo span{font-style:italic}
+.a-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;margin-bottom:4px}
+.a-sub2{font-size:13px;color:var(--ink3);font-weight:300;margin-bottom:1.5rem}
+.tabs{display:flex;border-bottom:1.5px solid var(--ln);margin-bottom:1.5rem}
+.tab{padding:8px 0;margin-right:2rem;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:all .2s;background:none;border-left:none;border-right:none;border-top:none;font-family:'Outfit',sans-serif}
+.tab.active{color:var(--gr);border-bottom-color:var(--gr)}
+.fld{margin-bottom:1rem}
+.fld label{display:block;font-size:11px;font-weight:600;color:var(--ink2);letter-spacing:.3px;margin-bottom:5px}
+.fld input,.fld select{width:100%;padding:10px 12px;border:1px solid var(--ln);border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:14px;color:var(--ink);background:var(--cr);outline:none;transition:border-color .15s}
+.fld input:focus,.fld select:focus{border-color:var(--gm);background:var(--wh)}
+.fld-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-g{width:100%;padding:11px;background:var(--gr);color:white;border:none;border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s}
+.btn-g:hover{background:var(--gm)}
+.a-err{background:var(--rb);color:var(--red);border:1px solid rgba(192,57,43,.15);border-radius:var(--rs);padding:8px 12px;font-size:12px;margin-bottom:1rem;display:none}
+
+/* ═══ STORE SELECT ═══ */
+#store-sel{min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;padding:2rem;background:var(--cr)}
+.ss-logo{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gr);margin-bottom:1.5rem}
+.ss-logo span{font-style:italic}
+.ss-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:400;text-align:center;margin-bottom:.5rem}
+.ss-sub{font-size:13px;color:var(--ink3);font-weight:300;text-align:center;margin-bottom:2rem}
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;width:100%;max-width:760px}
+.so{background:var(--wh);border:1.5px solid var(--ln);border-radius:var(--r);padding:1.25rem;cursor:pointer;transition:all .2s;position:relative;text-align:left}
+.so:hover{border-color:var(--gm);background:var(--gf)}
+.so.sel{border-color:var(--gr);background:var(--gf)}
+.so-em{font-size:2.5rem;margin-bottom:.75rem}
+.so-nm{font-size:14px;font-weight:500;margin-bottom:2px}
+.so-ct{font-size:12px;color:var(--ink3);font-weight:300}
+.so-chk{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:var(--gr);color:white;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.so.sel .so-chk{display:flex}
+
+/* ═══ APP ═══ */
+#app{display:none;min-height:100vh}
+nav{background:var(--wh);border-bottom:1px solid var(--ln);position:sticky;top:0;z-index:100;padding:0 2rem;height:58px;display:flex;align-items:center;justify-content:space-between}
+.n-logo{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gr)}
+.n-logo span{font-style:italic}
+.n-store{font-size:11px;color:var(--ink3);background:var(--gf);border:1px solid var(--gp);border-radius:20px;padding:3px 10px;margin-left:8px}
+.n-links{display:flex;gap:2px}
+.nl{padding:6px 12px;border-radius:var(--rs);color:var(--ink3);font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;font-family:inherit;transition:all .15s}
+.nl:hover{color:var(--ink);background:var(--cr)}
+.nl.active{color:var(--gr);background:var(--gf)}
+.n-right{display:flex;align-items:center;gap:8px}
+.nb{position:relative;cursor:pointer;padding:6px;border-radius:var(--rs);font-size:18px}
+.nb:hover{background:var(--cr)}
+.nd{position:absolute;top:2px;right:2px;width:7px;height:7px;background:var(--red);border-radius:50%;display:none}
+.nd.on{display:block}
+.cart-btn{display:flex;align-items:center;gap:7px;padding:7px 14px;background:var(--gr);color:white;border:none;border-radius:var(--rs);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.cpill{background:white;color:var(--gr);border-radius:10px;padding:1px 7px;font-size:11px;font-weight:600}
+.uchip{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid var(--ln);border-radius:20px;cursor:pointer;font-size:12px;color:var(--ink2)}
+.udot{width:24px;height:24px;border-radius:50%;background:var(--gp);color:var(--gr);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+
+/* PAGES */
+.page{display:none;max-width:1180px;margin:0 auto;padding:2.5rem 2rem}
+.page.active{display:block;animation:fi .3s ease}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.pg-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:400}
+.pg-title span{font-style:italic;color:var(--gr)}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--gr) 0%,var(--gm) 100%);border-radius:16px;padding:2.5rem;margin-bottom:2rem;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.05) 0%,transparent 70%)}
+.hero h2{color:white;font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;margin-bottom:.25rem}
+.hero h2 em{color:var(--gp);font-style:italic}
+.hero p{color:rgba(255,255,255,.6);font-size:13px;font-weight:300}
+
+/* SEARCH + CATS */
+.srch{position:relative;margin-bottom:1.25rem}
+.srch input{width:100%;padding:10px 16px 10px 38px;border:1px solid var(--ln);border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:14px;background:var(--wh);color:var(--ink);outline:none}
+.srch input:focus{border-color:var(--gm)}
+.si{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink4);font-size:14px}
+.cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem}
+.cc{padding:5px 14px;border:1px solid var(--ln);border-radius:20px;font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;background:var(--wh);transition:all .15s}
+.cc:hover{border-color:var(--gm);color:var(--gr)}
+.cc.active{background:var(--gr);border-color:var(--gr);color:white}
+
+/* PRODUCTS GRID */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;background:var(--ln);border:1px solid var(--ln);border-radius:var(--r);overflow:hidden}
+.pcard{background:var(--wh);padding:1.25rem;cursor:pointer;transition:background .15s;display:flex;flex-direction:column}
+.pcard:hover{background:var(--gf)}
+.pc-em{font-size:2.2rem;margin-bottom:.75rem}
+.pc-cat{font-size:10px;font-weight:600;color:var(--gl);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+.pc-nm{font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.3}
+.new-tag{font-size:9px;background:var(--gr);color:white;border-radius:3px;padding:1px 5px;margin-left:5px;vertical-align:middle;font-weight:600}
+.pc-desc{font-size:12px;color:var(--ink3);font-weight:300;line-height:1.4;margin-bottom:12px;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc-ft{display:flex;align-items:center;justify-content:space-between}
+.pc-pr{font-family:'Cormorant Garamond',serif;font-size:1.2rem}
+.pc-pr small{font-family:'Outfit',sans-serif;font-size:10px;color:var(--ink3);font-weight:300}
+.stag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px}
+.st-ok{background:#EBFAF2;color:#1B7A4F}
+.st-lo{background:var(--ob);color:var(--or)}
+.st-out{background:var(--rb);color:var(--red)}
+.add-btn{margin-top:10px;padding:7px;border:1px solid var(--ln);border-radius:var(--rs);background:transparent;color:var(--ink2);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;width:100%}
+.add-btn:hover:not(:disabled){background:var(--gr);border-color:var(--gr);color:white}
+.add-btn:disabled{color:var(--ink4);cursor:not-allowed}
+
+/* MODAL */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
+.ov.open{display:flex}
+.modal{background:var(--wh);border-radius:16px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto}
+.m-top{display:flex;align-items:flex-start;justify-content:space-between;padding:1.5rem 1.5rem 0}
+.m-em{font-size:3.5rem;line-height:1}
+.mc{width:28px;height:28px;border:1px solid var(--ln);border-radius:50%;background:none;color:var(--ink3);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.mb{padding:.875rem 1.5rem 1.5rem}
+.m-cat{font-size:10px;font-weight:600;color:var(--gl);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+.m-nm{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:400;margin-bottom:2px}
+.m-pr{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:var(--gr);margin-bottom:1rem}
+.msep{height:1px;background:var(--ln);margin:1rem 0}
+.slbl{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.ai-block{border:1px solid var(--gp);border-radius:var(--rs);background:var(--gf);padding:1rem;margin-bottom:1rem}
+.ai-h{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--gm);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.ai-h::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--gm);display:block}
+.ai-t{font-size:13px;color:var(--ink2);font-weight:300;line-height:1.65}
+.dots{display:flex;gap:4px;align-items:center}.dots span{width:5px;height:5px;border-radius:50%;background:var(--gm);opacity:.5;animation:p 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes p{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.3);opacity:1}}
+.ai-ask{display:flex;gap:6px;margin-top:10px;border-top:1px solid var(--gp);padding-top:10px}
+.ai-ask input{flex:1;padding:7px 10px;border:1px solid var(--gp);border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:12px;background:white;color:var(--ink);outline:none}
+.ai-ask button{padding:7px 12px;background:var(--gr);color:white;border:none;border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer}
+.qwrap{display:flex;align-items:center;gap:10px;margin:1rem 0}
+.qc{width:30px;height:30px;border:1px solid var(--ln);border-radius:50%;background:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:all .15s}
+.qc:hover{border-color:var(--gr);color:var(--gr)}
+.qv{font-size:16px;font-weight:500;min-width:26px;text-align:center}
+.m-acts{display:flex;gap:8px}
+.btn-ghost{flex:1;padding:11px;border:1px solid var(--ln);border-radius:var(--rs);background:none;color:var(--ink2);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer}
+.btn-gr{flex:2;padding:11px;background:var(--gr);color:white;border:none;border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s}
+.btn-gr:hover:not(:disabled){background:var(--gm)}
+.btn-gr:disabled{background:var(--ln);color:var(--ink4);cursor:not-allowed}
+.btn-sm{padding:6px 14px;border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--ln);background:none;color:var(--ink2);transition:all .15s}
+.btn-sm:hover{border-color:var(--gm);color:var(--gr)}
+.btn-sm.pri{background:var(--gr);border-color:var(--gr);color:white}
+
+/* CART */
+.cl{display:grid;grid-template-columns:1fr 320px;gap:1.5rem;align-items:start}
+.cbox{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);overflow:hidden}
+.cbox-h{padding:.875rem 1.25rem;border-bottom:1px solid var(--ln2);font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px}
+.crow{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-bottom:1px solid var(--ln2);transition:background .15s}
+.crow:hover{background:var(--cr)}
+.crow-em{font-size:1.8rem;width:36px;text-align:center}
+.crow-nm{font-size:14px;font-weight:500}
+.crow-pr{font-size:12px;color:var(--ink3);font-weight:300;margin-top:2px}
+.crow-ctrl{display:flex;align-items:center;gap:5px}
+.cqb{width:24px;height:24px;border:1px solid var(--ln);border-radius:50%;background:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink3);transition:all .15s}
+.cqb:hover{border-color:var(--gr);color:var(--gr)}
+.cqn{font-size:13px;font-weight:500;min-width:18px;text-align:center}
+.ctot{font-size:13px;font-weight:500;min-width:90px;text-align:right}
+.crm{background:none;border:none;color:var(--ink4);cursor:pointer;font-size:13px;padding:3px}
+.crm:hover{color:var(--red)}
+.sum-box{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem}
+.sum-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--ink2)}
+.sum-row.tot{font-size:15px;font-weight:600;color:var(--ink);border-top:1px solid var(--ln);padding-top:10px;margin-top:4px}
+.del-box{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:1.25rem}
+.del-box h4{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:1rem}
+.ro{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--ln);border-radius:var(--rs);margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.ro:has(input:checked){border-color:var(--gr);background:var(--gf)}
+.ro input{accent-color:var(--gr)}
+.ro-nm{font-size:13px;font-weight:500}
+.ro-sub{font-size:11px;color:var(--ink3)}
+.cempty{text-align:center;padding:5rem 2rem}
+.cempty-i{font-size:3rem;opacity:.25;margin-bottom:1rem}
+
+/* ORDERS */
+.ocard{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);margin-bottom:10px;cursor:pointer;transition:border-color .15s;overflow:hidden}
+.ocard:hover{border-color:var(--gm)}
+.oc-h{padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ln2)}
+.oc-id{font-size:12px;font-weight:500}
+.oc-dt{font-size:11px;color:var(--ink3)}
+.oc-b{padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between}
+.oc-items{font-size:13px;color:var(--ink2);font-weight:300}
+.oc-tot{font-family:'Cormorant Garamond',serif;font-size:1.2rem}
+
+/* PILLS */
+.pill{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.pg{background:#EBFAF2;color:#1B7A4F}
+.po{background:var(--ob);color:var(--or)}
+.pr{background:var(--rb);color:var(--red)}
+.pb{background:var(--bb);color:var(--bl)}
+.pp{background:var(--pb);color:var(--pu)}
+.px{background:var(--ln2);color:var(--ink3)}
+
+/* VENDOR UPDATE NOTIF */
+.vn{position:fixed;top:1rem;right:1rem;background:var(--wh);border:1.5px solid var(--gr);border-radius:12px;padding:1rem 1.25rem;z-index:500;box-shadow:0 8px 24px rgba(27,67,50,.12);max-width:290px;transform:translateX(120%);transition:transform .4s cubic-bezier(.175,.885,.32,1.275)}
+.vn.show{transform:translateX(0)}
+.vn-t{font-size:13px;font-weight:600;color:var(--gr);margin-bottom:4px}
+.vn-b{font-size:12px;color:var(--ink2);font-weight:300}
+.vn-close{position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:14px;color:var(--ink3)}
+
+/* INVOICES */
+.inv-card{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:1.1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;transition:border-color .15s}
+.inv-card:hover{border-color:var(--gm)}
+
+/* PROFILE */
+.pbox{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:2rem;max-width:440px}
+.pb-top{display:flex;align-items:center;gap:1rem;padding-bottom:1.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--ln)}
+.pb-av{width:50px;height:50px;border-radius:50%;background:var(--gp);color:var(--gr);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:600}
+.pb-nm{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:400}
+.pb-em{font-size:12px;color:var(--ink3);font-weight:300}
+.ir{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--ln2);font-size:13px}
+.ir:last-of-type{border-bottom:none}
+.ir label{color:var(--ink3);font-weight:300}
+.ir span{font-weight:500}
+
+/* RESERVATION */
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start}
+.rfm{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:1.5rem}
+.rfm h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:1.25rem}
+.rcard{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:white;padding:9px 18px;border-radius:30px;font-size:12px;z-index:999;transition:all .3s;opacity:0;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* MOBILE NAV */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--wh);border-top:1px solid var(--ln);z-index:100;padding:.5rem 0 calc(.5rem + env(safe-area-inset-bottom))}
+.mob-nav-inner{display:flex;align-items:center;justify-content:space-around}
+.mn-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;background:none;border:none;font-family:'Outfit',sans-serif;font-size:10px;color:var(--ink3);cursor:pointer;min-width:56px}
+.mn-btn.active{color:var(--gr)}
+.mn-btn .mn-ic{font-size:20px;line-height:1}
+.mn-badge{background:var(--red);color:white;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;margin-left:4px}
+
+/* ANNOUNCEMENTS client */
+.ann-banner{background:linear-gradient(135deg,#EFF6FF,#F5F3FF);border:1px solid rgba(91,155,245,.3);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:10px}
+.ann-banner.urgent{background:linear-gradient(135deg,#FFFBEB,#FDF0EF);border-color:rgba(180,83,9,.3)}
+.ann-banner.premium{background:linear-gradient(135deg,#F5F3FF,#FFFAEB);border-color:rgba(124,58,237,.3)}
+.ann-banner-icon{font-size:1.3rem;flex-shrink:0}
+.ann-banner-t{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.ann-banner-b{font-size:12px;color:var(--ink2);font-weight:300;line-height:1.4}
+
+/* TABLE SCROLL */
+.tbl-w{overflow-x:auto}
+table{min-width:450px}
+
+@media(max-width:900px){
+  .a-left{display:none}.a-right{width:100%;padding:2rem}
+  .cl{grid-template-columns:1fr}.rg{grid-template-columns:1fr}
+  .fld-row{grid-template-columns:1fr}
+  #pg-profile .pbox~div,.pg-profile-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:640px){
+  .n-links{display:none}
+  .mob-nav{display:block}
+  #app nav .cart-btn span:not(.cpill){display:none}
+  .page{padding:1.25rem 1rem;padding-bottom:80px}
+  .hero{padding:1.5rem}
+  .hero h2{font-size:1.5rem}
+  .vn{max-width:calc(100vw - 1.5rem);right:.75rem}
+  .ss-title{font-size:1.5rem}
+  .sg{grid-template-columns:1fr}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .a-right{padding:1.5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH ═══ -->
+<div id="auth">
+  <div class="a-left">
+    <div><div class="a-logo">Fresh<span>Mart</span></div><div class="a-sub">Épicerie en ligne</div></div>
+    <div class="a-tag">Des produits frais,<br><em>livrés chez vous.</em></div>
+  </div>
+  <div class="a-right">
+    <div class="a-r-logo">Fresh<span>Mart</span></div>
+    <div class="a-title">Bienvenue</div>
+    <div class="a-sub2">Connectez-vous ou créez votre compte client</div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login',this)">Connexion</button>
+      <button class="tab" onclick="switchTab('reg',this)">Créer un compte</button>
+    </div>
+    <div class="a-err" id="aerr"></div>
+    <div id="form-login">
+      <div class="fld"><label>Email</label><input type="email" id="le" placeholder="vous@email.com"></div>
+      <div class="fld"><label>Mot de passe</label><input type="password" id="lp" placeholder="••••••••"></div>
+      <button class="btn-g" onclick="doLogin()">Se connecter</button>
+    </div>
+    <div id="form-reg" style="display:none">
+      <div class="fld-row">
+        <div class="fld"><label>Prénom</label><input type="text" id="fn" placeholder="Jean"></div>
+        <div class="fld"><label>Nom</label><input type="text" id="ln" placeholder="Dupont"></div>
+      </div>
+      <div class="fld"><label>Email</label><input type="email" id="re" placeholder="vous@email.com"></div>
+      <div class="fld"><label>Téléphone</label><input type="tel" id="rp" placeholder="+229 00 00 00 00"></div>
+      <div class="fld"><label>Adresse de livraison</label><input type="text" id="ra" placeholder="Quartier, rue..."></div>
+      <div class="fld-row">
+        <div class="fld"><label>Ville</label><input type="text" id="rv" placeholder="Cotonou"></div>
+        <div class="fld"><label>Pays</label><select id="rc"><option>Bénin</option><option>Togo</option><option>Nigeria</option><option>Ghana</option><option>Côte d'Ivoire</option><option>Sénégal</option><option>France</option></select></div>
+      </div>
+      <div class="fld"><label>Mot de passe (min. 6)</label><input type="password" id="rpw" placeholder="••••••••"></div>
+      <button class="btn-g" onclick="doRegister()">Créer mon compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHOIX BOUTIQUE ═══ -->
+<div id="store-sel">
+  <div class="ss-logo">Fresh<span>Mart</span></div>
+  <div class="ss-title">Choisissez votre boutique</div>
+  <div class="ss-sub">Sur quelle boutique souhaitez-vous faire vos achats aujourd'hui ?</div>
+  <div class="sg" id="sg"></div>
+  <button class="btn-g" style="margin-top:1.5rem;max-width:220px" onclick="confirmStore()">Continuer →</button>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <nav>
+    <div style="display:flex;align-items:center">
+      <div class="n-logo">Fresh<span>Mart</span></div>
+      <span class="n-store" id="n-store"></span>
+    </div>
+    <div class="n-links">
+      <button class="nl active" onclick="goPage('catalogue',this)">Catalogue</button>
+      <button class="nl" onclick="goPage('orders',this)">Commandes</button>
+      <button class="nl" onclick="goPage('reservations',this)">Réservations</button>
+      <button class="nl" onclick="goPage('invoices',this)">Factures</button>
+    </div>
+    <div class="n-right">
+      <div class="nb" onclick="goPage('orders',null)" title="Notifications"><span>🔔</span><div class="nd" id="nd"></div></div>
+      <button class="cart-btn" onclick="goPage('cart',null)">Panier <span class="cpill" id="cart-n">0</span></button>
+      <div class="uchip" onclick="goPage('profile',null)"><div class="udot" id="udot">?</div><span id="uname"></span></div>
+    </div>
+  </nav>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <div class="mob-nav">
+    <div class="mob-nav-inner">
+      <button class="mn-btn active" id="mn-cat" onclick="goPage('catalogue',this)"><span class="mn-ic">🛒</span>Catalogue</button>
+      <button class="mn-btn" id="mn-ord" onclick="goPage('orders',this)"><span class="mn-ic">📦</span>Commandes</button>
+      <button class="mn-btn" id="mn-cart" onclick="goPage('cart',this)"><span class="mn-ic">🛍️</span>Panier<span class="mn-badge" id="mn-cart-n" style="display:none">0</span></button>
+      <button class="mn-btn" id="mn-inv" onclick="goPage('invoices',this)"><span class="mn-ic">🧾</span>Factures</button>
+      <button class="mn-btn" id="mn-pro" onclick="goPage('profile',this)"><span class="mn-ic">👤</span>Profil</button>
+    </div>
+  </div>
+
+  <!-- CATALOGUE -->
+  <div class="page active" id="pg-catalogue">
+    <div class="hero">
+      <h2>Votre épicerie,<br><em>livrée chez vous</em></h2>
+      <p id="hero-store"></p>
+    </div>
+    <div id="ann-banners"></div>
+    <div class="srch"><span class="si">⌕</span><input type="text" placeholder="Rechercher un produit..." oninput="renderCat()"></div>
+    <div class="cats" id="cats"></div>
+    <div class="pgrid" id="pgrid"></div>
+  </div>
+
+  <!-- PANIER -->
+  <div class="page" id="pg-cart">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.5rem">
+      <h1 class="pg-title">Mon <span>panier</span></h1>
+    </div>
+    <div id="cart-body"></div>
+  </div>
+
+  <!-- COMMANDES -->
+  <div class="page" id="pg-orders">
+    <h1 class="pg-title" style="margin-bottom:1.5rem">Mes <span>commandes</span></h1>
+    <div id="orders-body"></div>
+  </div>
+
+  <!-- RÉSERVATIONS -->
+  <div class="page" id="pg-reservations">
+    <h1 class="pg-title" style="margin-bottom:1.5rem"><span>Réserver</span> un produit</h1>
+    <div class="rg">
+      <div class="rfm">
+        <h3>Nouvelle réservation</h3>
+        <div class="fld"><label>Produit</label><select id="res-p"></select></div>
+        <div class="fld-row">
+          <div class="fld"><label>Quantité</label><input type="number" id="res-q" value="1" min="1"></div>
+          <div class="fld"><label>Date souhaitée</label><input type="date" id="res-d"></div>
+        </div>
+        <div class="fld"><label>Note</label><input type="text" id="res-n" placeholder="Précisions..."></div>
+        <button class="btn-g" onclick="makeRes()">Confirmer</button>
+      </div>
+      <div>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;margin-bottom:1rem;color:var(--ink2)">Mes réservations</h3>
+        <div id="res-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FACTURES -->
+  <div class="page" id="pg-invoices">
+    <h1 class="pg-title" style="margin-bottom:.5rem">Mes <span>factures</span></h1>
+    <p style="font-size:13px;color:var(--ink3);font-weight:300;margin-bottom:1.5rem">Téléchargez les factures de vos commandes confirmées ou livrées.</p>
+    <div id="inv-body"></div>
+  </div>
+
+  <!-- PROFIL -->
+  <div class="page" id="pg-profile">
+    <h1 class="pg-title" style="margin-bottom:1.5rem">Mon <span>profil</span></h1>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+      <div class="pbox">
+        <div class="pb-top"><div class="pb-av" id="pb-av">?</div><div><div class="pb-nm" id="pb-nm"></div><div class="pb-em" id="pb-em"></div></div></div>
+        <div id="pb-rows"></div>
+        <button style="margin-top:1rem;padding:9px 18px;background:var(--gf);border:1px solid var(--gp);color:var(--gr);border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;font-weight:500" onclick="switchStore()">🏪 Changer de boutique</button>
+        <button style="margin-top:.75rem;padding:9px 18px;background:none;border:1px solid var(--red);color:var(--red);border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;display:block" onclick="logout()">Se déconnecter</button>
+      </div>
+      <!-- DONNER MON AVIS -->
+      <div>
+        <div style="background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:1.5rem;margin-bottom:1rem">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;margin-bottom:.375rem">⭐ Mon avis sur la boutique</h3>
+          <p style="font-size:12px;color:var(--ink3);font-weight:300;margin-bottom:1rem">Notez votre expérience avec <strong id="review-store-name"></strong></p>
+          <div id="client-review-form">
+            <div style="margin-bottom:.875rem">
+              <div style="font-size:11px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Votre note</div>
+              <div id="star-client" style="display:flex;gap:6px"></div>
+            </div>
+            <div class="fld"><label>Titre</label><input type="text" id="cr-title" placeholder="Ex: Très bonne épicerie !"></div>
+            <div class="fld"><label>Commentaire</label><textarea id="cr-comment" style="width:100%;padding:9px 12px;border:1px solid var(--ln);border-radius:var(--rs);font-family:inherit;font-size:13px;color:var(--ink);background:var(--bg);outline:none;resize:vertical;min-height:80px" placeholder="Partagez votre expérience..."></textarea></div>
+            <button onclick="submitClientReview()" style="width:100%;padding:11px;background:var(--gr);color:white;border:none;border-radius:var(--rs);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Publier mon avis</button>
+          </div>
+          <div id="client-my-review" style="display:none"></div>
+        </div>
+        <!-- Avis des autres clients -->
+        <div style="background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);overflow:hidden">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--ln2);display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;font-weight:500">Avis clients <span id="store-rev-count" style="font-weight:300;color:var(--ink3)"></span></span><div id="store-avg-stars" style="color:#F5A623"></div></div>
+          <div id="store-reviews-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRODUIT -->
+<div class="ov" id="pov">
+  <div class="modal">
+    <div class="m-top"><div class="m-em" id="m-em">📦</div><button class="mc" onclick="closePM()">✕</button></div>
+    <div class="mb">
+      <div class="m-cat" id="m-cat"></div>
+      <div class="m-nm" id="m-nm"></div>
+      <div class="m-pr" id="m-pr"></div>
+      <div class="msep"></div>
+      <div class="slbl">Description</div>
+      <div id="m-desc" style="font-size:14px;color:var(--ink2);font-weight:300;line-height:1.65;margin-bottom:1rem"></div>
+      <div class="ai-block">
+        <div class="ai-h">Analyse IA du produit</div>
+        <div class="ai-t" id="ai-out"><div class="dots"><span></span><span></span><span></span></div></div>
+        <div class="ai-ask"><input type="text" id="ai-q" placeholder="Poser une question sur ce produit..."><button onclick="askAI()">Envoyer</button></div>
+      </div>
+      <div id="m-stock" style="margin-bottom:.75rem"></div>
+      <div class="msep"></div>
+      <div class="qwrap">
+        <button class="qc" onclick="mQty(-1)">−</button>
+        <span class="qv" id="m-qty">1</span>
+        <button class="qc" onclick="mQty(1)">+</button>
+        <span style="font-size:12px;color:var(--ink3);font-weight:300">unité(s)</span>
+      </div>
+      <div class="m-acts">
+        <button class="btn-ghost" onclick="closePM()">Fermer</button>
+        <button class="btn-gr" id="m-add" onclick="addFromModal()">Ajouter au panier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMMANDE DETAIL -->
+<div class="ov" id="odov">
+  <div class="modal" style="max-width:560px">
+    <div class="m-top" style="padding:1.25rem 1.5rem;align-items:center">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.35rem" id="od-t">Commande</div>
+      <button class="mc" onclick="closeOD()">✕</button>
+    </div>
+    <div class="mb" id="od-b"></div>
+  </div>
+</div>
+
+<!-- NOTIF VENDEUR -->
+<div class="vn" id="vn">
+  <button class="vn-close" onclick="closeVN()">✕</button>
+  <div class="vn-t" id="vn-t">Mise à jour commande</div>
+  <div class="vn-b" id="vn-b"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══ STATE ═══
+let me=null, selStore=null, curProd=null, mQtyV=1
+
+// ═══ DATA ═══
+const $ = id => document.getElementById(id)
+const GS = () => JSON.parse(localStorage.getItem('fm_stores')||'[]').filter(s=>s.active!==false)
+const GP = () => JSON.parse(localStorage.getItem('fm_products')||'[]')
+const GU = () => JSON.parse(localStorage.getItem('fm_users')||'[]')
+const SU = v => localStorage.setItem('fm_users', JSON.stringify(v))
+const getCart = () => JSON.parse(localStorage.getItem('cart_'+me?.email)||'[]')
+const setCart = c => { localStorage.setItem('cart_'+me?.email, JSON.stringify(c)); updCartN() }
+const getMyOrders = () => JSON.parse(localStorage.getItem('fm_orders_'+me?.email)||'[]')
+const setMyOrders = o => localStorage.setItem('fm_orders_'+me?.email, JSON.stringify(o))
+const getMyRes = () => JSON.parse(localStorage.getItem('fm_res_'+me?.email)||'[]')
+const setMyRes = r => localStorage.setItem('fm_res_'+me?.email, JSON.stringify(r))
+const showToast = m => { const e=$('toast'); e.textContent=m; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),2500) }
+const SL = (c,t) => `<span class="pill ${c}">${t}</span>`
+
+// ═══ AUTH ═══
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active')
+  $('form-login').style.display=tab==='login'?'':'none'
+  $('form-reg').style.display=tab==='reg'?'':'none'
+  $('aerr').style.display='none'
+}
+function showErr(msg) { const e=$('aerr'); e.textContent=msg; e.style.display='block' }
+
+function doLogin() {
+  const email=$('le').value.trim(), pass=$('lp').value
+  if(!email||!pass) return showErr('Remplissez tous les champs')
+  const u=GU().find(x=>x.email===email&&x.password===pass)
+  if(!u) return showErr('Email ou mot de passe incorrect')
+  me=u; localStorage.setItem('fm_client_me', JSON.stringify(u))
+  showStoreSelect()
+}
+function doRegister() {
+  const fn=$('fn').value.trim(),ln=$('ln').value.trim(),email=$('re').value.trim()
+  const phone=$('rp').value.trim(),addr=$('ra').value.trim(),city=$('rv').value.trim()
+  const country=$('rc').value,pass=$('rpw').value
+  if(!fn||!ln||!email||!phone||!addr||!city||!pass) return showErr('Remplissez tous les champs')
+  if(pass.length<6) return showErr('Mot de passe trop court (min. 6 caractères)')
+  const users=GU()
+  if(users.find(u=>u.email===email)) return showErr('Email déjà utilisé')
+  const u={id:Date.now(),fn,ln,email,phone,addr,city,country,password:pass,createdAt:new Date().toISOString()}
+  users.push(u); SU(users)
+  me=u; localStorage.setItem('fm_client_me', JSON.stringify(u))
+  showStoreSelect()
+}
+function logout() { me=null; selStore=null; localStorage.removeItem('fm_client_me'); localStorage.removeItem('fm_selstore'); location.reload() }
+function switchStore() { $('app').style.display='none'; showStoreSelect() }
+
+// ═══ STORE SELECT ═══
+function showStoreSelect() {
+  $('auth').style.display='none'; $('app').style.display='none'
+  $('store-sel').style.display='flex'
+  const stores=GS(), saved=localStorage.getItem('fm_selstore')
+  selStore=stores.find(s=>s.id===saved)||stores[0]||null
+  $('sg').innerHTML=stores.length ? stores.map(s=>`
+    <div class="so ${s.id===(selStore?.id)?'sel':''}" onclick="pickStore('${s.id}',this)">
+      <div class="so-chk">✓</div>
+      <div class="so-em">${s.emoji||'🏪'}</div>
+      <div class="so-nm">${s.name}</div>
+      <div class="so-ct">${s.city||''}</div>
+    </div>`).join('') : '<div style="color:var(--ink3);font-size:13px">Aucune boutique disponible</div>'
+}
+function pickStore(id, el) {
+  document.querySelectorAll('.so').forEach(o=>o.classList.remove('sel')); el.classList.add('sel')
+  selStore=GS().find(s=>s.id===id)||null
+}
+function confirmStore() {
+  if(!selStore) return
+  localStorage.setItem('fm_selstore', selStore.id)
+  $('store-sel').style.display='none'
+  bootApp()
+}
+
+// ═══ BOOT ═══
+function bootApp() {
+  $('auth').style.display='none'; $('store-sel').style.display='none'; $('app').style.display='block'
+  $('n-store').textContent=(selStore?.emoji||'🏪')+' '+(selStore?.name||'')
+  $('hero-store').textContent=(selStore?.emoji||'')+' '+(selStore?.name||'')
+  $('udot').textContent=(me.fn[0]+me.ln[0]).toUpperCase()
+  $('uname').textContent=me.fn
+  updCartN()
+  renderCat()
+  renderAnnBanners()
+  $('res-d').min=new Date().toISOString().split('T')[0]
+  $('res-d').value=new Date().toISOString().split('T')[0]
+  startNotifPolling()
+}
+window.addEventListener('load', ()=>{
+  const saved=localStorage.getItem('fm_client_me')
+  if(saved){
+    me=JSON.parse(saved)
+    const sid=localStorage.getItem('fm_selstore')
+    if(sid){ selStore=GS().find(s=>s.id===sid)||GS()[0]; if(selStore)bootApp(); else showStoreSelect() }
+    else showStoreSelect()
+  }
+})
+
+// ═══ NAV ═══
+function goPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
+  document.querySelectorAll('.nl').forEach(l=>l.classList.remove('active'))
+  document.querySelectorAll('.mn-btn').forEach(b=>b.classList.remove('active'))
+  $('pg-'+id).classList.add('active')
+  if(btn) btn.classList.add('active')
+  // Sync mobile nav
+  const mobMap={catalogue:'mn-cat',orders:'mn-ord',cart:'mn-cart',invoices:'mn-inv',profile:'mn-pro'}
+  if(mobMap[id]) { const mb=$(mobMap[id]); if(mb)mb.classList.add('active') }
+  if(id==='cart') renderCart()
+  if(id==='orders') renderOrders()
+  if(id==='reservations') renderReservations()
+  if(id==='invoices') renderInvoices()
+  if(id==='profile') renderProfile()
+}
+
+// ═══ ANNOUNCEMENTS BANNERS ═══
+function renderAnnBanners() {
+  const el=$('ann-banners'); if(!el)return
+  const anns=JSON.parse(localStorage.getItem('fm_announcements')||'[]')
+  const sid=selStore?.id||''
+  const myAnns=anns.filter(a=>a.target==='all'||a.target===sid).slice(0,3)
+  const tI={info:'ℹ️',urgent:'⚠️',premium:'✦',update:'🔄'}
+  el.innerHTML=myAnns.map(a=>`<div class="ann-banner ${a.type}">
+    <div class="ann-banner-icon">${tI[a.type]||'📢'}</div>
+    <div><div class="ann-banner-t">${a.title}</div><div class="ann-banner-b">${a.msg}</div></div>
+  </div>`).join('')
+}
+
+// ═══ CATALOGUE ═══
+let activeCat='all'
+function renderCat() {
+  const prods=GP(), q=document.querySelector('.srch input')?.value?.toLowerCase()||''
+  const cats=[...new Set(prods.map(p=>p.category))]
+  $('cats').innerHTML=`<button class="cc ${activeCat==='all'?'active':''}" onclick="setCat('all',this)">Tous</button>`+cats.map(c=>`<button class="cc ${activeCat===c?'active':''}" onclick="setCat('${c}',this)">${c}</button>`).join('')
+  let f=prods
+  if(q) f=f.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q))
+  if(activeCat!=='all') f=f.filter(p=>p.category===activeCat)
+  $('pgrid').innerHTML=f.length?f.map(p=>{
+    const sc=p.stock===0?'st-out':p.stock<10?'st-lo':'st-ok', st=p.stock===0?'Rupture':p.stock<10?p.stock+' restants':'En stock'
+    const priceHtml = p.promo
+      ? `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+           <span style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;color:var(--or)">${p.promo.toLocaleString('fr-FR')} <small style="font-family:Outfit,sans-serif;font-size:10px;font-weight:300">FCFA</small></span>
+           <span style="text-decoration:line-through;color:var(--ink4);font-size:12px">${p.price.toLocaleString('fr-FR')}</span>
+           <span style="background:#FFF3E0;color:#E65100;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.3px">-${Math.round((1-p.promo/p.price)*100)}%</span>
+         </div>`
+      : `<div class="pc-pr">${p.price.toLocaleString('fr-FR')} <small>FCFA</small></div>`
+    return`<div class="pcard" onclick="openProd(${p.id})">
+      <div class="pc-em">${p.emoji}</div>
+      <div class="pc-cat">${p.category}</div>
+      <div class="pc-nm">${p.name}${p.new?'<span class="new-tag">NOUVEAU</span>':''}</div>
+      <div class="pc-desc">${p.desc}</div>
+      <div class="pc-ft">${priceHtml}<span class="stag ${sc}">${st}</span></div>
+      <button class="add-btn" ${p.stock===0?'disabled':''} onclick="event.stopPropagation();qadd(${p.id})">${p.stock===0?'Indisponible':'+ Panier'}</button>
+    </div>`
+  }).join('') : '<div style="padding:4rem;text-align:center;color:var(--ink3);grid-column:1/-1">Aucun produit trouvé</div>'
+}
+function setCat(c, btn) { activeCat=c; document.querySelectorAll('.cc').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderCat() }
+function qadd(id) {
+  const p=GP().find(x=>x.id===id);if(!p||!p.stock)return
+  const effectivePrice=p.promo||p.price
+  const c=getCart(),ex=c.find(i=>i.id===id)
+  if(ex)ex.qty++;else c.push({id:p.id,name:p.name,price:effectivePrice,originalPrice:p.price,emoji:p.emoji,qty:1})
+  setCart(c);showToast(p.name+' ajouté au panier')
+}
+
+// ═══ PRODUCT MODAL ═══
+function openProd(id) {
+  const p=GP().find(x=>x.id===id);if(!p)return
+  curProd=p;mQtyV=1
+  $('m-em').textContent=p.emoji;$('m-cat').textContent=p.category;$('m-nm').textContent=p.name
+  // Show promo price with strikethrough if applicable
+  if(p.promo){
+    const pct=Math.round((1-p.promo/p.price)*100)
+    $('m-pr').innerHTML=`<span style="color:var(--or);font-size:1.5rem">${p.promo.toLocaleString('fr-FR')}</span> <span style="font-family:Outfit,sans-serif;font-size:11px;color:var(--ink3);font-weight:300">FCFA</span>&nbsp;&nbsp;<span style="text-decoration:line-through;font-size:1rem;color:var(--ink4)">${p.price.toLocaleString('fr-FR')}</span>&nbsp;<span style="background:#FFF3E0;color:#E65100;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px">-${pct}%</span>`
+  } else {
+    $('m-pr').innerHTML=p.price.toLocaleString('fr-FR')+' <span style="font-family:Outfit,sans-serif;font-size:12px;color:var(--ink3);font-weight:300">FCFA</span>'
+  }
+  $('m-desc').textContent=p.desc;$('m-qty').textContent='1';$('ai-q').value=''
+  $('m-stock').innerHTML=p.stock===0?SL('pr','Rupture de stock'):p.stock<10?SL('po','⚠ Seulement '+p.stock+' unités'):SL('pg','✓ '+p.stock+' unités disponibles')
+  $('m-add').disabled=p.stock===0;$('ai-out').innerHTML='<div class="dots"><span></span><span></span><span></span></div>'
+  $('pov').classList.add('open'); runAI(p)
+}
+function closePM() { $('pov').classList.remove('open') }
+function mQty(d) { if(!curProd)return; mQtyV=Math.max(1,Math.min(mQtyV+d,curProd.stock)); $('m-qty').textContent=mQtyV }
+function addFromModal() {
+  if(!curProd||!curProd.stock)return
+  const effectivePrice = curProd.promo || curProd.price
+  const c=getCart(), ex=c.find(i=>i.id===curProd.id)
+  if(ex) ex.qty+=mQtyV; else c.push({id:curProd.id,name:curProd.name,price:effectivePrice,originalPrice:curProd.price,emoji:curProd.emoji,qty:mQtyV})
+  setCart(c); showToast(curProd.name+' ajouté'); closePM()
+}
+async function runAI(p) {
+  const out=$('ai-out')
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'Tu es un assistant commercial pour une épicerie en Afrique de l\'Ouest. En 2-3 phrases, présente les bénéfices et usages de ce produit. Sois chaleureux et informatif. Réponds en français.',messages:[{role:'user',content:`Produit: ${p.name}. Catégorie: ${p.category}. Description: ${p.desc}. Prix: ${p.price} FCFA. Stock: ${p.stock} unités.`}]})})
+    const d=await r.json(); out.textContent=d.content?.[0]?.text||'—'
+  } catch { out.textContent='Analyse IA indisponible.' }
+}
+async function askAI() {
+  const q=$('ai-q').value.trim(); if(!q||!curProd)return
+  const out=$('ai-out'); out.innerHTML='<div class="dots"><span></span><span></span><span></span></div>'; $('ai-q').value=''
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'Tu es un assistant épicerie. Réponds brièvement en français à la question du client sur ce produit.',messages:[{role:'user',content:`Produit: ${curProd.name}. Description: ${curProd.desc}. Prix: ${curProd.price} FCFA. Question: ${q}`}]})})
+    const d=await r.json(); out.textContent=d.content?.[0]?.text||'—'
+  } catch { out.textContent='Service indisponible.' }
+}
+
+// ═══ CART ═══
+function updCartN() {
+  const n=getCart().reduce((s,i)=>s+i.qty,0)
+  $('cart-n').textContent=n
+  const mb=$('mn-cart-n')
+  if(mb){mb.textContent=n;mb.style.display=n>0?'inline':'none'}
+}
+function renderCart() {
+  const cart=getCart(), body=$('cart-body')
+  if(!cart.length){ body.innerHTML=`<div class="cempty"><div class="cempty-i">🛒</div><p style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:var(--ink3);margin-bottom:1.5rem">Votre panier est vide</p><button class="btn-g" style="width:auto;padding:10px 24px" onclick="goPage('catalogue',null)">Voir le catalogue</button></div>`; return }
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0)
+  body.innerHTML=`<div class="cl">
+    <div class="cbox">
+      <div class="cbox-h">Articles (${cart.reduce((s,i)=>s+i.qty,0)})</div>
+      ${cart.map(it=>`<div class="crow">
+        <div class="crow-em">${it.emoji}</div>
+        <div style="flex:1"><div class="crow-nm">${it.name}</div><div class="crow-pr">${it.price.toLocaleString('fr-FR')} FCFA × ${it.qty}</div></div>
+        <div class="crow-ctrl"><button class="cqb" onclick="cQty(${it.id},-1)">−</button><span class="cqn">${it.qty}</span><button class="cqb" onclick="cQty(${it.id},1)">+</button></div>
+        <div class="ctot">${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</div>
+        <button class="crm" onclick="rmCart(${it.id})">✕</button>
+      </div>`).join('')}
+    </div>
+    <div>
+      <div class="sum-box">
+        <div class="sum-row"><span>Sous-total</span><span>${total.toLocaleString('fr-FR')} FCFA</span></div>
+        <div class="sum-row"><span>Livraison</span><span>À confirmer</span></div>
+        <div class="sum-row tot"><span>Total</span><span>${total.toLocaleString('fr-FR')} FCFA</span></div>
+      </div>
+      <div class="del-box">
+        <h4>Livraison</h4>
+        <label class="ro"><input type="radio" name="del" value="home" checked><div><div class="ro-nm">Livraison à domicile</div><div class="ro-sub">Livré à votre adresse</div></div></label>
+        <label class="ro"><input type="radio" name="del" value="pickup"><div><div class="ro-nm">Retrait en boutique</div><div class="ro-sub">À récupérer en magasin</div></div></label>
+        <div class="fld" style="margin-top:1rem"><label>Adresse</label><input type="text" id="del-a" value="${me?.addr||''}, ${me?.city||''}"></div>
+        <div class="fld"><label>Note pour le livreur</label><input type="text" id="del-n" placeholder="Précisions..."></div>
+        <button class="btn-g" style="margin-top:.5rem" onclick="placeOrder()">Commander ✓</button>
+      </div>
+    </div>
+  </div>`
+}
+function cQty(id,d){const c=getCart(),it=c.find(i=>i.id===id);if(!it)return;it.qty=Math.max(1,it.qty+d);setCart(c);renderCart()}
+function rmCart(id){setCart(getCart().filter(i=>i.id!==id));renderCart()}
+function placeOrder(){
+  const cart=getCart();if(!cart.length)return
+  const delType=document.querySelector('input[name="del"]:checked')?.value||'home'
+  const addr=$('del-a')?.value||'', note=$('del-n')?.value||''
+  const qr='QR'+Date.now().toString(36).toUpperCase()
+  const order={id:'FM-'+Date.now(),qr,storeId:selStore?.id||'',items:cart,total:cart.reduce((s,i)=>s+i.price*i.qty,0),delType,addr,note,status:'pending',createdAt:new Date().toISOString(),customer:{name:me.fn+' '+me.ln,phone:me.phone,email:me.email,city:me.city}}
+  const myOrders=getMyOrders();myOrders.push(order);setMyOrders(myOrders)
+  const allOrders=JSON.parse(localStorage.getItem('fm_all_orders')||'[]');allOrders.push(order);localStorage.setItem('fm_all_orders',JSON.stringify(allOrders))
+  setCart([]);showToast('Commande passée !');goPage('orders',null)
+}
+
+// ═══ ORDERS ═══
+function renderOrders() {
+  syncOrderStatuses()
+  const orders=getMyOrders().reverse(), body=$('orders-body')
+  const sm={pending:'po',confirmed:'pg',delivered:'pb'}, sl={pending:'En attente ⏳',confirmed:'Confirmée ✓',delivered:'Livrée 📦'}
+  body.innerHTML=orders.length ? orders.map(o=>`<div class="ocard" onclick="viewOrder('${o.id}')">
+    <div class="oc-h"><div><span class="oc-id">${o.id.slice(-12)}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="oc-dt">${new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}</span>${SL(sm[o.status]||'px',sl[o.status]||'—')}</div></div>
+    <div class="oc-b"><div class="oc-items">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty}`).join(' · ')}</div><div class="oc-tot">${o.total.toLocaleString('fr-FR')} FCFA</div></div>
+  </div>`).join('') : '<div style="text-align:center;padding:4rem;color:var(--ink3)"><p style="font-family:\'Cormorant Garamond\',serif;font-size:1.4rem;font-weight:300;margin-bottom:1.5rem">Aucune commande</p><button class="btn-g" style="width:auto;padding:10px 24px" onclick="goPage(\'catalogue\',null)">Explorer le catalogue</button></div>'
+}
+function syncOrderStatuses() {
+  const allOrders=JSON.parse(localStorage.getItem('fm_all_orders')||'[]')
+  const myOrders=getMyOrders(); let changed=false
+  myOrders.forEach(o=>{const ao=allOrders.find(x=>x.id===o.id);if(ao&&ao.status!==o.status){o.status=ao.status;changed=true}})
+  if(changed) setMyOrders(myOrders)
+}
+function viewOrder(id) {
+  syncOrderStatuses()
+  const o=getMyOrders().find(x=>x.id===id);if(!o)return
+  const sm={pending:'po',confirmed:'pg',delivered:'pb'}, sl={pending:'En attente ⏳',confirmed:'Confirmée ✓',delivered:'Livrée 📦'}
+  $('od-t').textContent='Commande '+o.id.slice(-10)
+  $('od-b').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      ${SL(sm[o.status]||'px',sl[o.status]||'—')}
+      <span style="font-size:12px;color:var(--ink3)">${new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</span>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.75rem">Articles</div>
+    ${o.items.map(it=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--cr);border-radius:var(--rs);margin-bottom:6px"><div><span style="font-size:1.2rem;margin-right:8px">${it.emoji}</span>${it.name} ×${it.qty}</div><div style="font-weight:500">${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</div></div>`).join('')}
+    <div style="display:flex;justify-content:space-between;padding:12px;font-weight:600;font-size:15px;background:var(--wh);border:1px solid var(--ln);border-radius:var(--rs);margin-bottom:1rem"><span>Total</span><span style="color:var(--gr)">${o.total.toLocaleString('fr-FR')} FCFA</span></div>
+    <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Livraison</div>
+    <div style="font-size:13px;color:var(--ink2);background:var(--cr);border-radius:var(--rs);padding:.875rem;margin-bottom:1rem">${o.delType||'—'} · ${o.addr||'—'}</div>
+    <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Votre QR Code de commande</div>
+    <div style="background:var(--wh);border:1px solid var(--ln);border-radius:var(--rs);padding:1rem;text-align:center;margin-bottom:1rem">
+      <div id="od-qr" style="display:inline-block"></div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:.5rem">Présentez ce code au vendeur</div>
+      <div style="font-size:10px;color:var(--ink4);margin-top:2px">${o.qr||o.id}</div>
+    </div>
+    ${(o.status==='confirmed'||o.status==='delivered')?`<button class="btn-g" onclick="dlInvoice('${o.id}')">↓ Télécharger la facture PDF</button>`:''}
+  `
+  $('odov').classList.add('open')
+  // Marquer les notifs de cette commande lues
+  const notifs=JSON.parse(localStorage.getItem('fm_cnotifs')||'[]')
+  notifs.filter(n=>n.orderId===id).forEach(n=>n.read=true)
+  localStorage.setItem('fm_cnotifs', JSON.stringify(notifs))
+  $('nd').classList.remove('on')
+  setTimeout(()=>{
+    const c=$('od-qr'); if(!c)return; c.innerHTML=''
+    try{new QRCode(c,{text:o.qr||o.id,width:110,height:110,colorDark:'#1B4332',colorLight:'#fff'})}
+    catch{c.innerHTML='<div style="font-size:11px;color:var(--ink3)">'+o.id+'</div>'}
+  },100)
+}
+function closeOD() { $('odov').classList.remove('open') }
+
+// ═══ INVOICES ═══
+function renderInvoices() {
+  syncOrderStatuses()
+  const orders=getMyOrders().filter(o=>o.status==='confirmed'||o.status==='delivered').reverse()
+  $('inv-body').innerHTML=orders.length ? orders.map(o=>`<div class="inv-card">
+    <div><div style="font-size:13px;font-weight:500">Facture — ${o.id.slice(-10)}</div><div style="font-size:11px;color:var(--ink3);margin-top:2px">${o.total.toLocaleString('fr-FR')} FCFA · ${new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</div></div>
+    <div style="display:flex;gap:6px;align-items:center">${SL(o.status==='delivered'?'pb':'pg',o.status==='delivered'?'Livrée 📦':'Confirmée ✓')}<button class="btn-sm pri" onclick="dlInvoice('${o.id}')">↓ PDF</button></div>
+  </div>`).join('') : '<div style="text-align:center;padding:4rem;color:var(--ink3);background:var(--wh);border:1px dashed var(--ln);border-radius:var(--r)">Vos factures apparaîtront ici une fois vos commandes confirmées.</div>'
+}
+function dlInvoice(oid) {
+  syncOrderStatuses()
+  const o = getMyOrders().find(x=>x.id===oid); if(!o) return
+  const store = GS().find(s=>s.id===o.storeId) || GS()[0]
+  const {jsPDF} = window.jspdf
+  const doc = new jsPDF({unit:'mm',format:'a4'})
+  const PW=210, PH=297
+
+  // Palette
+  const G=[27,99,50], G2=[45,106,79], GL=[216,243,220], W=[255,255,255]
+  const INK=[17,22,18], INK2=[61,73,64], INK3=[122,140,128]
+  const LN=[227,234,229], BG=[247,249,247], OR=[180,83,9]
+
+  const setC = c => doc.setTextColor(c[0],c[1],c[2])
+  const setF = c => doc.setFillColor(c[0],c[1],c[2])
+  const setDC= c => doc.setDrawColor(c[0],c[1],c[2])
+  const rect  = (x,y,w,h) => doc.rect(x,y,w,h,'F')
+  const txt   = (t,x,y,o) => doc.text(String(t),x,y,o||{})
+
+  const sn = store?.name||'FreshMart'
+  const sc = store ? `${store.city||''}, ${store.country||''}` : ''
+  const sa = store?.addr||''
+  const sp = store?.ownerPhone||''
+  const se = store?.ownerEmail||''
+  const invNum  = 'FM-'+o.id.slice(-8).toUpperCase()
+  const invDate = new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})
+  const dueDate = new Date(new Date(o.createdAt).getTime()+30*864e5).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})
+  const statusLabel = {pending:'En attente',confirmed:'Confirmée',delivered:'Livrée'}[o.status]||o.status
+  const statusColor = o.status==='delivered'?[30,64,175]:o.status==='confirmed'?G:OR
+
+  // ── ZONE 1 : EN-TÊTE ──
+  setF(G); rect(0,0,PW,55)
+  setF(G2); doc.triangle(PW-55,55,PW,55,PW,0,'F')
+
+  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(22); txt(sn,16,22)
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); setC(GL)
+  if(sc) txt(sc,16,30)
+  if(sa) txt(sa,16,36)
+  if(sp) txt(sp,16,42)
+  if(se) txt(se,16,48)
+
+  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(28); txt('FACTURE',PW-16,24,{align:'right'})
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); setC(GL)
+  txt(invNum,PW-16,33,{align:'right'})
+  txt(invDate,PW-16,40,{align:'right'})
+
+  // ── ZONE 2 : BANDE INFO ──
+  setF(BG); rect(0,55,PW,35)
+
+  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('FACTURER À',16,66)
+  setC(INK);  doc.setFont('helvetica','bold'); doc.setFontSize(11)
+  txt(o.customer?.name||me.fn+' '+me.ln, 16,74)
+  setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5)
+  txt(me.phone||'', 16,81)
+  if(me.addr) txt(me.addr, 16,88)
+
+  setF(LN); rect(105,58,0.4,28)
+
+  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('STATUT',112,66)
+  setF(statusColor); doc.roundedRect(112,68,28,7,2,2,'F')
+  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(8.5)
+  txt(statusLabel.toUpperCase(),126,73.5,{align:'center'})
+
+  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('ÉCHÉANCE',150,66)
+  setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); txt(dueDate,150,73)
+
+  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('LIVRAISON',150,81)
+  setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5)
+  txt(o.delType==='delivery'?'À domicile':'Retrait boutique', 150,88)
+
+  // ── ZONE 3 : TABLEAU ARTICLES ──
+  let y = 103
+  setF(G); rect(14,y-5,182,9)
+  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(8)
+  const cols=[16,90,120,148,175]
+  const headers=['DESCRIPTION','QTÉ','PRIX UNIT.','REMISE','TOTAL']
+  headers.forEach((h,i) => txt(h,cols[i],y+1))
+  y += 9
+
+  ;(o.items||[]).forEach((it,i) => {
+    if(y>240){ doc.addPage(); setF(G); rect(14,15,182,9); setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(8); headers.forEach((h,j)=>txt(h,cols[j],21)); y=30 }
+    setF(i%2===0?BG:W); rect(14,y-5,182,12)
+    setF(LN); rect(14,y+7,182,0.3)
+    const unit = it.price||0, orig = it.originalPrice||unit, qty = it.qty||1
+    const discount = orig > unit ? (orig-unit)*qty : 0
+    setC(INK); doc.setFont('helvetica','normal'); doc.setFontSize(9)
+    txt((it.emoji||'')+' '+it.name.slice(0,32), cols[0],y+2)
+    doc.setFont('helvetica','bold'); txt(String(qty),cols[1],y+2)
+    doc.setFont('helvetica','normal'); setC(INK2)
+    txt(unit.toLocaleString('fr-FR')+' F', cols[2],y+2)
+    if(discount>0){ setC(OR); txt('-'+discount.toLocaleString('fr-FR')+' F',cols[3],y+2) }
+    else { setC(INK3); txt('—',cols[3],y+2) }
+    setC(INK); doc.setFont('helvetica','bold')
+    txt((unit*qty).toLocaleString('fr-FR')+' F', PW-16,y+2,{align:'right'})
+    y += 13
+  })
+
+  // ── ZONE 4 : TOTAUX ──
+  y += 4
+  setF(LN); rect(14,y,182,0.4); y += 6
+
+  const subtotal = (o.items||[]).reduce((s,it)=>s+(it.originalPrice||it.price)*it.qty, 0)
+  const totalDisc = subtotal - o.total
+  if(totalDisc > 0){
+    setC(INK3); doc.setFont('helvetica','normal'); doc.setFontSize(9.5)
+    txt('Sous-total',120,y); setC(INK2); txt(subtotal.toLocaleString('fr-FR')+' FCFA',PW-16,y,{align:'right'}); y+=8
+    setC(INK3); txt('Remises',120,y); setC(OR); txt('-'+totalDisc.toLocaleString('fr-FR')+' FCFA',PW-16,y,{align:'right'}); y+=8
+  }
+  y += 2
+  setF(G); rect(100,y-6,PW-114,16)
+  setC(GL); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); txt('TOTAL TTC',106,y+2)
+  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(14)
+  txt(o.total.toLocaleString('fr-FR')+' FCFA', PW-16,y+4,{align:'right'})
+  y += 22
+
+  // Note
+  if(o.note?.trim()){
+    setF([255,251,235]); rect(14,y,182,16)
+    setF(OR); rect(14,y,2,16)
+    setC(OR); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('NOTE',20,y+6)
+    setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); txt(o.note.slice(0,90),20,y+12)
+    y += 22
+  }
+
+  // ── PIED DE PAGE ──
+  const footerY = PH-22
+  setF(G); rect(0,footerY-2,PW,0.6)
+  setF(GL); rect(0,footerY-2,40,0.6)
+  setC(INK3); doc.setFont('helvetica','normal'); doc.setFontSize(7.5)
+  txt('Merci pour votre confiance — '+sn, PW/2,footerY+4,{align:'center'})
+  doc.setFontSize(7)
+  txt(sc+(sp?' · '+sp:''), PW/2,footerY+10,{align:'center'})
+  txt('Facture '+invNum+' · Générée le '+new Date().toLocaleDateString('fr-FR'), PW-16,footerY+10,{align:'right'})
+
+  // Numéros de pages
+  const pc=doc.internal.getNumberOfPages()
+  for(let i=1;i<=pc;i++){ doc.setPage(i); setC(INK3); doc.setFont('helvetica','normal'); doc.setFontSize(7); txt('Page '+i+'/'+pc,16,footerY+10) }
+
+  doc.save(`facture-${invNum}.pdf`)
+  showToast('Facture téléchargée ✓')
+}
+
+// ═══ RESERVATIONS ═══
+function renderReservations() {
+  const prods=GP().filter(p=>p.stock>0)
+  $('res-p').innerHTML=prods.map(p=>`<option value="${p.id}">${p.emoji} ${p.name} — ${p.price.toLocaleString('fr-FR')} FCFA</option>`).join('')
+  const res=getMyRes().reverse()
+  $('res-list').innerHTML=res.length?res.map(r=>`<div class="rcard"><div><div style="font-size:14px;font-weight:500">${r.pName}</div><div style="font-size:12px;color:var(--ink3);font-weight:300;margin-top:2px">${r.qty} unité(s) · ${new Date(r.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</div></div>${SL(r.status==='confirmed'?'pg':'po',r.status==='confirmed'?'Confirmée ✓':'En attente')}</div>`).join('') : '<div style="font-size:13px;color:var(--ink3);font-weight:300">Aucune réservation.</div>'
+}
+function makeRes() {
+  const prods=GP(), pid=parseInt($('res-p').value), p=prods.find(x=>x.id===pid);if(!p)return
+  const qty=parseInt($('res-q').value)||1, date=$('res-d').value, note=$('res-n').value
+  if(!date){showToast('Choisissez une date');return}
+  const r={id:'RES-'+Date.now(),pid,pName:p.name,qty,date,note,status:'pending',createdAt:new Date().toISOString()}
+  const res=getMyRes();res.push(r);setMyRes(res)
+  const allRes=JSON.parse(localStorage.getItem('fm_all_reservations')||'[]')
+  allRes.push({...r,customer:me.fn+' '+me.ln,phone:me.phone});localStorage.setItem('fm_all_reservations',JSON.stringify(allRes))
+  $('res-n').value=''; showToast('Réservation enregistrée'); renderReservations()
+}
+
+// ═══ PROFILE ═══
+let clientStarRating = 0
+function renderProfile() {
+  $('pb-av').textContent=(me.fn[0]+me.ln[0]).toUpperCase()
+  $('pb-nm').textContent=me.fn+' '+me.ln; $('pb-em').textContent=me.email
+  $('pb-rows').innerHTML=[['Téléphone',me.phone],['Adresse',me.addr],['Ville',me.city],['Pays',me.country],['Boutique',selStore?.name||'—'],['Membre depuis',new Date(me.createdAt).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})]].map(([l,v])=>`<div class="ir"><label>${l}</label><span>${v}</span></div>`).join('')
+
+  // Avis section
+  const rsn=$('review-store-name'); if(rsn) rsn.textContent=selStore?.name||'la boutique'
+  renderClientReviewForm()
+  renderStoreReviews()
+}
+
+function renderClientStars(n) {
+  clientStarRating=n
+  const el=$('star-client'); if(!el)return
+  el.innerHTML=[1,2,3,4,5].map(i=>`<span onclick="renderClientStars(${i})" onmouseover="hoverClientStars(${i})" onmouseout="renderClientStars(${clientStarRating})" style="font-size:2rem;cursor:pointer;color:${i<=n?'#F5A623':'var(--ink4)'};transition:color .15s;user-select:none">${i<=n?'★':'☆'}</span>`).join('')
+}
+function hoverClientStars(n) {
+  const el=$('star-client'); if(!el)return
+  el.querySelectorAll('span').forEach((s,i)=>{s.style.color=i<n?'#F5A623':'var(--ink4)'})
+}
+
+function renderClientReviewForm() {
+  // Init stars
+  renderClientStars(clientStarRating||0)
+  // Check existing review
+  const existing=getMyStoreReview()
+  const form=$('client-review-form'), myrev=$('client-my-review')
+  if(!form||!myrev)return
+  if(existing){
+    form.style.display='none'; myrev.style.display='block'
+    myrev.innerHTML=`<div style="background:var(--gf);border:1px solid var(--gp);border-radius:var(--rs);padding:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <div style="font-size:1.1rem;color:#F5A623">${'★'.repeat(existing.rating)}${'☆'.repeat(5-existing.rating)}</div>
+        <button onclick="editClientReview()" style="padding:4px 9px;border:1px solid var(--ln);border-radius:4px;background:none;font-family:inherit;font-size:11px;color:var(--ink3);cursor:pointer">Modifier</button>
+      </div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:3px">${existing.title}</div>
+      <div style="font-size:12px;color:var(--ink2);font-weight:300">${existing.comment}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px">${new Date(existing.ts).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</div>
+    </div>`
+  } else {
+    form.style.display='block'; myrev.style.display='none'
+  }
+}
+function editClientReview() {
+  const r=getMyStoreReview(); if(!r)return
+  clientStarRating=r.rating
+  $('cr-title').value=r.title; $('cr-comment').value=r.comment
+  $('client-review-form').style.display='block'
+  $('client-my-review').style.display='none'
+  renderClientStars(r.rating)
+}
+
+function getMyStoreReview() {
+  const all=JSON.parse(localStorage.getItem('fm_client_reviews')||'[]')
+  return all.find(r=>r.email===me?.email&&r.storeId===selStore?.id)||null
+}
+function submitClientReview() {
+  if(!clientStarRating){showToast('Choisissez une note ⭐');return}
+  const title=$('cr-title').value.trim(), comment=$('cr-comment').value.trim()
+  if(!title||!comment){showToast('Remplissez titre et commentaire');return}
+  const reviews=JSON.parse(localStorage.getItem('fm_client_reviews')||'[]')
+  const idx=reviews.findIndex(r=>r.email===me?.email&&r.storeId===selStore?.id)
+  const rev={email:me.email,name:me.fn+' '+me.ln,storeId:selStore?.id,storeName:selStore?.name||'',rating:clientStarRating,title,comment,ts:Date.now()}
+  if(idx>=0) reviews[idx]=rev; else reviews.push(rev)
+  localStorage.setItem('fm_client_reviews',JSON.stringify(reviews))
+  showToast('Merci pour votre avis ! ⭐')
+  renderClientReviewForm(); renderStoreReviews()
+}
+function renderStoreReviews() {
+  const all=JSON.parse(localStorage.getItem('fm_client_reviews')||'[]')
+  const storeRevs=all.filter(r=>r.storeId===selStore?.id)
+  const countEl=$('store-rev-count'); if(countEl) countEl.textContent='('+storeRevs.length+')'
+  if(storeRevs.length) {
+    const avg=(storeRevs.reduce((s,r)=>s+r.rating,0)/storeRevs.length).toFixed(1)
+    const avgEl=$('store-avg-stars'); if(avgEl) avgEl.innerHTML='★'.repeat(Math.round(avg))+'<span style="color:var(--ink4)">'+'☆'.repeat(5-Math.round(avg))+'</span> '+avg
+  }
+  const listEl=$('store-reviews-list'); if(!listEl)return
+  listEl.innerHTML=storeRevs.length?storeRevs.sort((a,b)=>b.ts-a.ts).map(r=>`<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--ln2)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--gp);color:var(--gr);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600">${r.name?r.name[0]:'C'}</div><span style="font-size:13px;font-weight:500">${r.name}</span></div>
+      <span style="font-size:1rem;color:#F5A623">${'★'.repeat(r.rating)}<span style="color:var(--ink4)">${'☆'.repeat(5-r.rating)}</span></span>
+    </div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:3px">${r.title}</div>
+    <div style="font-size:12px;color:var(--ink2);font-weight:300">${r.comment}</div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:4px">${new Date(r.ts).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}</div>
+  </div>`).join(''):'<div style="padding:2rem;text-align:center;color:var(--ink3);font-size:13px;font-weight:300">Soyez le premier à laisser un avis !</div>'
+}
+
+// ═══ VENDOR NOTIF POLLING ═══
+let lastNotifTs=0
+function startNotifPolling() { setInterval(checkNotifs, 4000); setInterval(syncOrderStatuses, 5000); setInterval(renderAnnBanners, 15000) }
+function checkNotifs() {
+  if(!me)return
+  const notifs=JSON.parse(localStorage.getItem('fm_cnotifs')||'[]')
+  const myNotifs=notifs.filter(n=>{
+    const myOrders=getMyOrders()
+    return myOrders.find(o=>o.id===n.orderId)&&!n.read&&n.ts>lastNotifTs
+  })
+  if(myNotifs.length>0){
+    const latest=myNotifs[myNotifs.length-1]
+    lastNotifTs=latest.ts
+    showVN(latest)
+    $('nd').classList.add('on')
+  }
+  // Refresh catalogue si produits changés
+  renderCat()
+}
+function showVN(notif) {
+  $('vn-t').textContent='Mise à jour de votre commande'
+  $('vn-b').textContent=notif.msg||'Votre commande a été mise à jour.'
+  $('vn').classList.add('show'); setTimeout(()=>$('vn').classList.remove('show'),6000)
+}
+function closeVN() { $('vn').classList.remove('show') }
+</script>
+</body>
+</html>
