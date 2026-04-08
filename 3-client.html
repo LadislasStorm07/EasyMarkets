@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreshMart — Épicerie en ligne</title>
+<script src="api.js"></script>
+<script src="theme.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -241,6 +243,25 @@ nav{background:var(--wh);border-bottom:1px solid var(--ln);position:sticky;top:0
 .rfm h3{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;margin-bottom:1.25rem}
 .rcard{background:var(--wh);border:1px solid var(--ln);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
 
+/* CAROUSEL PRODUITS */
+.carousel-wrap{position:relative;overflow:hidden;margin-bottom:1.5rem;border-radius:var(--r);background:var(--wh);border:1px solid var(--ln)}
+.carousel-track{display:flex;transition:transform .45s cubic-bezier(.25,.46,.45,.94);will-change:transform}
+.carousel-slide{min-width:100%;position:relative}
+.carousel-slide img{width:100%;height:260px;object-fit:cover;display:block}
+.carousel-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(17,22,18,.75) 0%,transparent 100%);padding:1.25rem 1.5rem}
+.carousel-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;color:white;margin-bottom:4px}
+.carousel-price{font-size:13px;font-weight:500;color:rgba(255,255,255,.85)}
+.carousel-price s{opacity:.6;font-weight:300;margin-left:4px}
+.carousel-promo{background:var(--or);color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;margin-left:6px}
+.carousel-btn{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:all .2s;z-index:2}
+.carousel-btn:hover{background:white;transform:translateY(-50%) scale(1.05)}
+.carousel-prev{left:10px}
+.carousel-next{right:10px}
+.carousel-dots{position:absolute;bottom:12px;right:12px;display:flex;gap:5px}
+.carousel-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.45);cursor:pointer;transition:all .2s;border:none;padding:0}
+.carousel-dot.on{background:white;width:16px;border-radius:3px}
+.carousel-empty{display:none}
+
 /* TOAST */
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:white;padding:9px 18px;border-radius:30px;font-size:12px;z-index:999;transition:all .3s;opacity:0;pointer-events:none;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -373,6 +394,14 @@ table{min-width:450px}
       <p id="hero-store"></p>
     </div>
     <div id="ann-banners"></div>
+
+    <!-- CARROUSEL IMAGES PRODUITS -->
+    <div class="carousel-wrap" id="carousel-wrap" style="display:none">
+      <div class="carousel-track" id="carousel-track"></div>
+      <button class="carousel-btn carousel-prev" id="car-prev">‹</button>
+      <button class="carousel-btn carousel-next" id="car-next">›</button>
+      <div class="carousel-dots" id="car-dots"></div>
+    </div>
     <div class="srch"><span class="si">⌕</span><input type="text" placeholder="Rechercher un produit..." oninput="renderCat()"></div>
     <div class="cats" id="cats"></div>
     <div class="pgrid" id="pgrid"></div>
@@ -514,18 +543,37 @@ let me=null, selStore=null, curProd=null, mQtyV=1
 
 // ═══ DATA ═══
 const $ = id => document.getElementById(id)
-const GS = () => JSON.parse(localStorage.getItem('fm_stores')||'[]').filter(s=>s.active!==false)
-const GP = () => JSON.parse(localStorage.getItem('fm_products')||'[]')
-const GU = () => JSON.parse(localStorage.getItem('fm_users')||'[]')
-const SU = v => localStorage.setItem('fm_users', JSON.stringify(v))
-const getCart = () => JSON.parse(localStorage.getItem('cart_'+me?.email)||'[]')
-const setCart = c => { localStorage.setItem('cart_'+me?.email, JSON.stringify(c)); updCartN() }
-const getMyOrders = () => JSON.parse(localStorage.getItem('fm_orders_'+me?.email)||'[]')
-const setMyOrders = o => localStorage.setItem('fm_orders_'+me?.email, JSON.stringify(o))
-const getMyRes = () => JSON.parse(localStorage.getItem('fm_res_'+me?.email)||'[]')
-const setMyRes = r => localStorage.setItem('fm_res_'+me?.email, JSON.stringify(r))
+
+// Cache mémoire
+let _stores=[], _prods=[], _myOrders=[], _myRes=[]
+
+const GS = () => _stores
+const GP = () => _prods
+const getMyOrders = () => _myOrders
+const getMyRes = () => _myRes
+
+// Panier : reste en localStorage (données locales temporaires)
+const getCart = () => JSON.parse(localStorage.getItem('cart_'+(me?.email||'anon'))||'[]')
+const setCart = c => { localStorage.setItem('cart_'+(me?.email||'anon'), JSON.stringify(c)); updCartN() }
+
 const showToast = m => { const e=$('toast'); e.textContent=m; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),2500) }
 const SL = (c,t) => `<span class="pill ${c}">${t}</span>`
+
+async function loadClientData() {
+  if (!me) return
+  try {
+    const [stores, prods, orders, res] = await Promise.all([
+      FM.getStores(),
+      selStore ? FM.getProducts(selStore.id) : Promise.resolve([]),
+      FM.getClientOrders(me.email),
+      FM.getClientReservations(me.email)
+    ])
+    _stores = stores.filter(s=>s.active!==false).map(FM.adaptStore)
+    _prods  = prods.map(FM.adaptProduct)
+    _myOrders = orders.map(FM.adaptOrder)
+    _myRes  = res
+  } catch(err) { console.error('loadClientData:', err) }
+}
 
 // ═══ AUTH ═══
 function switchTab(tab, btn) {
@@ -536,35 +584,38 @@ function switchTab(tab, btn) {
 }
 function showErr(msg) { const e=$('aerr'); e.textContent=msg; e.style.display='block' }
 
-function doLogin() {
+async function doLogin() {
   const email=$('le').value.trim(), pass=$('lp').value
   if(!email||!pass) return showErr('Remplissez tous les champs')
-  const u=GU().find(x=>x.email===email&&x.password===pass)
-  if(!u) return showErr('Email ou mot de passe incorrect')
-  me=u; localStorage.setItem('fm_client_me', JSON.stringify(u))
+  const row = await FM.loginClient(email, pass)
+  if(!row) return showErr('Email ou mot de passe incorrect')
+  me = FM.adaptClient(row)
+  sessionStorage.setItem('fm_client_me', JSON.stringify(me))
   showStoreSelect()
 }
-function doRegister() {
+async function doRegister() {
   const fn=$('fn').value.trim(),ln=$('ln').value.trim(),email=$('re').value.trim()
   const phone=$('rp').value.trim(),addr=$('ra').value.trim(),city=$('rv').value.trim()
   const country=$('rc').value,pass=$('rpw').value
   if(!fn||!ln||!email||!phone||!addr||!city||!pass) return showErr('Remplissez tous les champs')
   if(pass.length<6) return showErr('Mot de passe trop court (min. 6 caractères)')
-  const users=GU()
-  if(users.find(u=>u.email===email)) return showErr('Email déjà utilisé')
-  const u={id:Date.now(),fn,ln,email,phone,addr,city,country,password:pass,createdAt:new Date().toISOString()}
-  users.push(u); SU(users)
-  me=u; localStorage.setItem('fm_client_me', JSON.stringify(u))
-  showStoreSelect()
+  try {
+    const row = await FM.createClient({fn,ln,email,password:pass,phone,addr,city,country})
+    me = FM.adaptClient(row)
+    sessionStorage.setItem('fm_client_me', JSON.stringify(me))
+    showStoreSelect()
+  } catch(err) { showErr('Erreur : ' + (err.message.includes('unique')? 'Email déjà utilisé' : err.message)) }
 }
-function logout() { me=null; selStore=null; localStorage.removeItem('fm_client_me'); localStorage.removeItem('fm_selstore'); location.reload() }
+function logout() { me=null; selStore=null; sessionStorage.removeItem('fm_client_me'); sessionStorage.removeItem('fm_selstore'); location.reload() }
 function switchStore() { $('app').style.display='none'; showStoreSelect() }
 
 // ═══ STORE SELECT ═══
-function showStoreSelect() {
+async function showStoreSelect() {
   $('auth').style.display='none'; $('app').style.display='none'
   $('store-sel').style.display='flex'
-  const stores=GS(), saved=localStorage.getItem('fm_selstore')
+  const stores = await FM.getStores().then(rows=>rows.filter(s=>s.active!==false).map(FM.adaptStore)).catch(()=>[])
+  _stores = stores
+  const saved = sessionStorage.getItem('fm_selstore')
   selStore=stores.find(s=>s.id===saved)||stores[0]||null
   $('sg').innerHTML=stores.length ? stores.map(s=>`
     <div class="so ${s.id===(selStore?.id)?'sel':''}" onclick="pickStore('${s.id}',this)">
@@ -576,37 +627,48 @@ function showStoreSelect() {
 }
 function pickStore(id, el) {
   document.querySelectorAll('.so').forEach(o=>o.classList.remove('sel')); el.classList.add('sel')
-  selStore=GS().find(s=>s.id===id)||null
+  selStore=_stores.find(s=>s.id===id)||null
 }
-function confirmStore() {
+async function confirmStore() {
   if(!selStore) return
-  localStorage.setItem('fm_selstore', selStore.id)
+  sessionStorage.setItem('fm_selstore', selStore.id)
   $('store-sel').style.display='none'
-  bootApp()
+  await bootApp()
 }
 
 // ═══ BOOT ═══
-function bootApp() {
+async function bootApp() {
   $('auth').style.display='none'; $('store-sel').style.display='none'; $('app').style.display='block'
+  await loadClientData()
   $('n-store').textContent=(selStore?.emoji||'🏪')+' '+(selStore?.name||'')
   $('hero-store').textContent=(selStore?.emoji||'')+' '+(selStore?.name||'')
   $('udot').textContent=(me.fn[0]+me.ln[0]).toUpperCase()
   $('uname').textContent=me.fn
   updCartN()
   renderCat()
+  renderCarousel()
   renderAnnBanners()
   $('res-d').min=new Date().toISOString().split('T')[0]
   $('res-d').value=new Date().toISOString().split('T')[0]
   startNotifPolling()
 }
-window.addEventListener('load', ()=>{
-  const saved=localStorage.getItem('fm_client_me')
+window.addEventListener('load', async ()=>{
+  const saved=sessionStorage.getItem('fm_client_me')
   if(saved){
     me=JSON.parse(saved)
-    const sid=localStorage.getItem('fm_selstore')
-    if(sid){ selStore=GS().find(s=>s.id===sid)||GS()[0]; if(selStore)bootApp(); else showStoreSelect() }
+    const sid=sessionStorage.getItem('fm_selstore')
+    const stores = await FM.getStores().then(rows=>rows.filter(s=>s.active!==false).map(FM.adaptStore)).catch(()=>[])
+    _stores = stores
+    if(sid){ selStore=stores.find(s=>s.id===sid)||stores[0]; if(selStore) await bootApp(); else showStoreSelect() }
     else showStoreSelect()
   }
+  // Carousel boutons
+  const prev=$('car-prev'), next=$('car-next')
+  if(prev) prev.addEventListener('click',()=>{ goSlide(carIdx-1); startCarTimer(); })
+  if(next) next.addEventListener('click',()=>{ goSlide(carIdx+1); startCarTimer(); })
+  // Pause au survol
+  const cw=$('carousel-wrap')
+  if(cw){ cw.addEventListener('mouseenter',stopCarTimer); cw.addEventListener('mouseleave',startCarTimer); }
 })
 
 // ═══ NAV ═══
@@ -627,17 +689,55 @@ function goPage(id, btn) {
 }
 
 // ═══ ANNOUNCEMENTS BANNERS ═══
-function renderAnnBanners() {
+async function renderAnnBanners() {
   const el=$('ann-banners'); if(!el)return
-  const anns=JSON.parse(localStorage.getItem('fm_announcements')||'[]')
-  const sid=selStore?.id||''
-  const myAnns=anns.filter(a=>a.target==='all'||a.target===sid).slice(0,3)
+  const anns = await FM.getAnnouncements(selStore?.id).catch(()=>[])
   const tI={info:'ℹ️',urgent:'⚠️',premium:'✦',update:'🔄'}
-  el.innerHTML=myAnns.map(a=>`<div class="ann-banner ${a.type}">
+  el.innerHTML=anns.slice(0,3).map(a=>`<div class="ann-banner ${a.type||'info'}">
     <div class="ann-banner-icon">${tI[a.type]||'📢'}</div>
-    <div><div class="ann-banner-t">${a.title}</div><div class="ann-banner-b">${a.msg}</div></div>
+    <div><div class="ann-banner-t">${a.title}</div><div class="ann-banner-b">${a.message}</div></div>
   </div>`).join('')
 }
+
+// ═══ CARROUSEL IMAGES ═══
+let carIdx=0, carSlides=[], carTimer=null
+function renderCarousel() {
+  const prods = GP().filter(p=>p.img && p.stock>0)
+  const wrap = $('carousel-wrap')
+  if(!wrap) return
+  if(!prods.length){ wrap.style.display='none'; return }
+  wrap.style.display='block'
+  carSlides = prods
+  carIdx = 0
+  const track = $('carousel-track')
+  track.innerHTML = prods.map(p=>{
+    const priceHtml = p.promo
+      ? `<span style="color:var(--gp);font-weight:600">${p.promo.toLocaleString('fr-FR')} FCFA</span><s>${p.price.toLocaleString('fr-FR')}</s><span class="carousel-promo">-${Math.round((1-p.promo/p.price)*100)}%</span>`
+      : `<span>${p.price.toLocaleString('fr-FR')} FCFA</span>`
+    return `<div class="carousel-slide" onclick="openProd(${p.id})" style="cursor:pointer">
+      <img src="${p.img}" alt="${p.name}" onerror="this.parentElement.style.display='none'">
+      <div class="carousel-overlay">
+        <div class="carousel-name">${p.emoji} ${p.name}</div>
+        <div class="carousel-price">${priceHtml}</div>
+      </div>
+    </div>`
+  }).join('')
+  // Dots
+  $('car-dots').innerHTML = prods.map((_,i)=>`<button class="carousel-dot${i===0?' on':''}" onclick="goSlide(${i})"></button>`).join('')
+  goSlide(0)
+  startCarTimer()
+}
+function goSlide(n) {
+  if(!carSlides.length) return
+  carIdx = (n+carSlides.length) % carSlides.length
+  $('carousel-track').style.transform = `translateX(-${carIdx*100}%)`
+  document.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('on',i===carIdx))
+}
+function startCarTimer() {
+  if(carTimer) clearInterval(carTimer)
+  carTimer = setInterval(()=>goSlide(carIdx+1), 3500)
+}
+function stopCarTimer() { if(carTimer) clearInterval(carTimer) }
 
 // ═══ CATALOGUE ═══
 let activeCat='all'
@@ -759,35 +859,37 @@ function renderCart() {
 }
 function cQty(id,d){const c=getCart(),it=c.find(i=>i.id===id);if(!it)return;it.qty=Math.max(1,it.qty+d);setCart(c);renderCart()}
 function rmCart(id){setCart(getCart().filter(i=>i.id!==id));renderCart()}
-function placeOrder(){
+async function placeOrder(){
   const cart=getCart();if(!cart.length)return
   const delType=document.querySelector('input[name="del"]:checked')?.value||'home'
   const addr=$('del-a')?.value||'', note=$('del-n')?.value||''
-  const qr='QR'+Date.now().toString(36).toUpperCase()
-  const order={id:'FM-'+Date.now(),qr,storeId:selStore?.id||'',items:cart,total:cart.reduce((s,i)=>s+i.price*i.qty,0),delType,addr,note,status:'pending',createdAt:new Date().toISOString(),customer:{name:me.fn+' '+me.ln,phone:me.phone,email:me.email,city:me.city}}
-  const myOrders=getMyOrders();myOrders.push(order);setMyOrders(myOrders)
-  const allOrders=JSON.parse(localStorage.getItem('fm_all_orders')||'[]');allOrders.push(order);localStorage.setItem('fm_all_orders',JSON.stringify(allOrders))
-  setCart([]);showToast('Commande passée !');goPage('orders',null)
+  try {
+    const order = await FM.createOrder({
+      storeId:selStore?.id||'', clientId:me.id||null,
+      customer:{name:me.fn+' '+me.ln,phone:me.phone,email:me.email},
+      addr, items:cart, total:cart.reduce((s,i)=>s+i.price*i.qty,0),
+      delType, note
+    })
+    _myOrders.unshift(FM.adaptOrder(order))
+    setCart([]); showToast('Commande passée !'); goPage('orders',null)
+  } catch(err) { showToast('Erreur commande: '+err.message) }
 }
 
 // ═══ ORDERS ═══
 function renderOrders() {
-  syncOrderStatuses()
-  const orders=getMyOrders().reverse(), body=$('orders-body')
+  const orders=getMyOrders(), body=$('orders-body')
   const sm={pending:'po',confirmed:'pg',delivered:'pb'}, sl={pending:'En attente ⏳',confirmed:'Confirmée ✓',delivered:'Livrée 📦'}
   body.innerHTML=orders.length ? orders.map(o=>`<div class="ocard" onclick="viewOrder('${o.id}')">
     <div class="oc-h"><div><span class="oc-id">${o.id.slice(-12)}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="oc-dt">${new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}</span>${SL(sm[o.status]||'px',sl[o.status]||'—')}</div></div>
-    <div class="oc-b"><div class="oc-items">${o.items.map(i=>`${i.emoji} ${i.name} ×${i.qty}`).join(' · ')}</div><div class="oc-tot">${o.total.toLocaleString('fr-FR')} FCFA</div></div>
+    <div class="oc-b"><div class="oc-items">${(o.items||[]).map(i=>`${i.emoji||'📦'} ${i.name} ×${i.qty}`).join(' · ')}</div><div class="oc-tot">${o.total.toLocaleString('fr-FR')} FCFA</div></div>
   </div>`).join('') : '<div style="text-align:center;padding:4rem;color:var(--ink3)"><p style="font-family:\'Cormorant Garamond\',serif;font-size:1.4rem;font-weight:300;margin-bottom:1.5rem">Aucune commande</p><button class="btn-g" style="width:auto;padding:10px 24px" onclick="goPage(\'catalogue\',null)">Explorer le catalogue</button></div>'
 }
-function syncOrderStatuses() {
-  const allOrders=JSON.parse(localStorage.getItem('fm_all_orders')||'[]')
-  const myOrders=getMyOrders(); let changed=false
-  myOrders.forEach(o=>{const ao=allOrders.find(x=>x.id===o.id);if(ao&&ao.status!==o.status){o.status=ao.status;changed=true}})
-  if(changed) setMyOrders(myOrders)
+async function syncOrderStatuses() {
+  if(!me) return
+  const orders = await FM.getClientOrders(me.email).catch(()=>[])
+  _myOrders = orders.map(FM.adaptOrder)
 }
 function viewOrder(id) {
-  syncOrderStatuses()
   const o=getMyOrders().find(x=>x.id===id);if(!o)return
   const sm={pending:'po',confirmed:'pg',delivered:'pb'}, sl={pending:'En attente ⏳',confirmed:'Confirmée ✓',delivered:'Livrée 📦'}
   $('od-t').textContent='Commande '+o.id.slice(-10)
@@ -797,11 +899,11 @@ function viewOrder(id) {
       <span style="font-size:12px;color:var(--ink3)">${new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</span>
     </div>
     <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.75rem">Articles</div>
-    ${o.items.map(it=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--cr);border-radius:var(--rs);margin-bottom:6px"><div><span style="font-size:1.2rem;margin-right:8px">${it.emoji}</span>${it.name} ×${it.qty}</div><div style="font-weight:500">${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</div></div>`).join('')}
+    ${(o.items||[]).map(it=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--cr);border-radius:var(--rs);margin-bottom:6px"><div><span style="font-size:1.2rem;margin-right:8px">${it.emoji||'📦'}</span>${it.name} ×${it.qty}</div><div style="font-weight:500">${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</div></div>`).join('')}
     <div style="display:flex;justify-content:space-between;padding:12px;font-weight:600;font-size:15px;background:var(--wh);border:1px solid var(--ln);border-radius:var(--rs);margin-bottom:1rem"><span>Total</span><span style="color:var(--gr)">${o.total.toLocaleString('fr-FR')} FCFA</span></div>
     <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Livraison</div>
     <div style="font-size:13px;color:var(--ink2);background:var(--cr);border-radius:var(--rs);padding:.875rem;margin-bottom:1rem">${o.delType||'—'} · ${o.addr||'—'}</div>
-    <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Votre QR Code de commande</div>
+    <div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">Votre QR Code</div>
     <div style="background:var(--wh);border:1px solid var(--ln);border-radius:var(--rs);padding:1rem;text-align:center;margin-bottom:1rem">
       <div id="od-qr" style="display:inline-block"></div>
       <div style="font-size:11px;color:var(--ink3);margin-top:.5rem">Présentez ce code au vendeur</div>
@@ -810,10 +912,10 @@ function viewOrder(id) {
     ${(o.status==='confirmed'||o.status==='delivered')?`<button class="btn-g" onclick="dlInvoice('${o.id}')">↓ Télécharger la facture PDF</button>`:''}
   `
   $('odov').classList.add('open')
-  // Marquer les notifs de cette commande lues
-  const notifs=JSON.parse(localStorage.getItem('fm_cnotifs')||'[]')
-  notifs.filter(n=>n.orderId===id).forEach(n=>n.read=true)
-  localStorage.setItem('fm_cnotifs', JSON.stringify(notifs))
+  // Marquer notifs lues
+  FM.getNotifications(me.email).then(notifs=>{
+    notifs.filter(n=>n.order_id===id).forEach(n=>FM.markRead(n.id))
+  }).catch(()=>{})
   $('nd').classList.remove('on')
   setTimeout(()=>{
     const c=$('od-qr'); if(!c)return; c.innerHTML=''
@@ -825,15 +927,13 @@ function closeOD() { $('odov').classList.remove('open') }
 
 // ═══ INVOICES ═══
 function renderInvoices() {
-  syncOrderStatuses()
-  const orders=getMyOrders().filter(o=>o.status==='confirmed'||o.status==='delivered').reverse()
+  const orders=getMyOrders().filter(o=>o.status==='confirmed'||o.status==='delivered')
   $('inv-body').innerHTML=orders.length ? orders.map(o=>`<div class="inv-card">
     <div><div style="font-size:13px;font-weight:500">Facture — ${o.id.slice(-10)}</div><div style="font-size:11px;color:var(--ink3);margin-top:2px">${o.total.toLocaleString('fr-FR')} FCFA · ${new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</div></div>
     <div style="display:flex;gap:6px;align-items:center">${SL(o.status==='delivered'?'pb':'pg',o.status==='delivered'?'Livrée 📦':'Confirmée ✓')}<button class="btn-sm pri" onclick="dlInvoice('${o.id}')">↓ PDF</button></div>
   </div>`).join('') : '<div style="text-align:center;padding:4rem;color:var(--ink3);background:var(--wh);border:1px dashed var(--ln);border-radius:var(--r)">Vos factures apparaîtront ici une fois vos commandes confirmées.</div>'
 }
 function dlInvoice(oid) {
-  syncOrderStatuses()
   const o = getMyOrders().find(x=>x.id===oid); if(!o) return
   const store = GS().find(s=>s.id===o.storeId) || GS()[0]
   const {jsPDF} = window.jspdf
@@ -978,18 +1078,22 @@ function dlInvoice(oid) {
 function renderReservations() {
   const prods=GP().filter(p=>p.stock>0)
   $('res-p').innerHTML=prods.map(p=>`<option value="${p.id}">${p.emoji} ${p.name} — ${p.price.toLocaleString('fr-FR')} FCFA</option>`).join('')
-  const res=getMyRes().reverse()
-  $('res-list').innerHTML=res.length?res.map(r=>`<div class="rcard"><div><div style="font-size:14px;font-weight:500">${r.pName}</div><div style="font-size:12px;color:var(--ink3);font-weight:300;margin-top:2px">${r.qty} unité(s) · ${new Date(r.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</div></div>${SL(r.status==='confirmed'?'pg':'po',r.status==='confirmed'?'Confirmée ✓':'En attente')}</div>`).join('') : '<div style="font-size:13px;color:var(--ink3);font-weight:300">Aucune réservation.</div>'
+  const res=getMyRes()
+  $('res-list').innerHTML=res.length?res.map(r=>`<div class="rcard"><div><div style="font-size:14px;font-weight:500">${r.product_name||r.pName||'—'}</div><div style="font-size:12px;color:var(--ink3);font-weight:300;margin-top:2px">${r.quantity||r.qty||1} unité(s) · ${new Date(r.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</div></div>${SL(r.status==='confirmed'?'pg':'po',r.status==='confirmed'?'Confirmée ✓':'En attente')}</div>`).join('') : '<div style="font-size:13px;color:var(--ink3);font-weight:300">Aucune réservation.</div>'
 }
-function makeRes() {
-  const prods=GP(), pid=parseInt($('res-p').value), p=prods.find(x=>x.id===pid);if(!p)return
+async function makeRes() {
+  const prods=GP(), pid=parseInt($('res-p').value), p=prods.find(x=>x.id==pid);if(!p)return
   const qty=parseInt($('res-q').value)||1, date=$('res-d').value, note=$('res-n').value
   if(!date){showToast('Choisissez une date');return}
-  const r={id:'RES-'+Date.now(),pid,pName:p.name,qty,date,note,status:'pending',createdAt:new Date().toISOString()}
-  const res=getMyRes();res.push(r);setMyRes(res)
-  const allRes=JSON.parse(localStorage.getItem('fm_all_reservations')||'[]')
-  allRes.push({...r,customer:me.fn+' '+me.ln,phone:me.phone});localStorage.setItem('fm_all_reservations',JSON.stringify(allRes))
-  $('res-n').value=''; showToast('Réservation enregistrée'); renderReservations()
+  try {
+    const r = await FM.createReservation({
+      storeId:selStore?.id||'', clientId:me.id||null,
+      customer:me.fn+' '+me.ln, phone:me.phone, email:me.email,
+      pid:p.id, pName:p.name, qty, date, note
+    })
+    _myRes.unshift(r)
+    $('res-n').value=''; showToast('Réservation enregistrée'); renderReservations()
+  } catch(err){ showToast('Erreur: '+err.message) }
 }
 
 // ═══ PROFILE ═══
@@ -1015,11 +1119,9 @@ function hoverClientStars(n) {
   el.querySelectorAll('span').forEach((s,i)=>{s.style.color=i<n?'#F5A623':'var(--ink4)'})
 }
 
-function renderClientReviewForm() {
-  // Init stars
+async function renderClientReviewForm() {
   renderClientStars(clientStarRating||0)
-  // Check existing review
-  const existing=getMyStoreReview()
+  const existing = await getMyStoreReview()
   const form=$('client-review-form'), myrev=$('client-my-review')
   if(!form||!myrev)return
   if(existing){
@@ -1031,14 +1133,14 @@ function renderClientReviewForm() {
       </div>
       <div style="font-size:14px;font-weight:500;margin-bottom:3px">${existing.title}</div>
       <div style="font-size:12px;color:var(--ink2);font-weight:300">${existing.comment}</div>
-      <div style="font-size:11px;color:var(--ink3);margin-top:4px">${new Date(existing.ts).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px">${new Date(existing.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</div>
     </div>`
   } else {
     form.style.display='block'; myrev.style.display='none'
   }
 }
-function editClientReview() {
-  const r=getMyStoreReview(); if(!r)return
+async function editClientReview() {
+  const r=await getMyStoreReview(); if(!r)return
   clientStarRating=r.rating
   $('cr-title').value=r.title; $('cr-comment').value=r.comment
   $('client-review-form').style.display='block'
@@ -1046,64 +1148,68 @@ function editClientReview() {
   renderClientStars(r.rating)
 }
 
-function getMyStoreReview() {
-  const all=JSON.parse(localStorage.getItem('fm_client_reviews')||'[]')
-  return all.find(r=>r.email===me?.email&&r.storeId===selStore?.id)||null
+async function getMyStoreReview() {
+  const all = await FM.getClientReviews(selStore?.id).catch(()=>[])
+  return all.find(r=>r.client_email===me?.email)||null
 }
-function submitClientReview() {
+async function submitClientReview() {
   if(!clientStarRating){showToast('Choisissez une note ⭐');return}
   const title=$('cr-title').value.trim(), comment=$('cr-comment').value.trim()
   if(!title||!comment){showToast('Remplissez titre et commentaire');return}
-  const reviews=JSON.parse(localStorage.getItem('fm_client_reviews')||'[]')
-  const idx=reviews.findIndex(r=>r.email===me?.email&&r.storeId===selStore?.id)
-  const rev={email:me.email,name:me.fn+' '+me.ln,storeId:selStore?.id,storeName:selStore?.name||'',rating:clientStarRating,title,comment,ts:Date.now()}
-  if(idx>=0) reviews[idx]=rev; else reviews.push(rev)
-  localStorage.setItem('fm_client_reviews',JSON.stringify(reviews))
+  await FM.saveClientReview({
+    email:me.email, name:me.fn+' '+me.ln,
+    storeId:selStore?.id, storeName:selStore?.name||'',
+    rating:clientStarRating, title, comment
+  })
   showToast('Merci pour votre avis ! ⭐')
   renderClientReviewForm(); renderStoreReviews()
 }
-function renderStoreReviews() {
-  const all=JSON.parse(localStorage.getItem('fm_client_reviews')||'[]')
-  const storeRevs=all.filter(r=>r.storeId===selStore?.id)
+async function renderStoreReviews() {
+  const storeRevs = await FM.getClientReviews(selStore?.id).catch(()=>[])
   const countEl=$('store-rev-count'); if(countEl) countEl.textContent='('+storeRevs.length+')'
   if(storeRevs.length) {
     const avg=(storeRevs.reduce((s,r)=>s+r.rating,0)/storeRevs.length).toFixed(1)
     const avgEl=$('store-avg-stars'); if(avgEl) avgEl.innerHTML='★'.repeat(Math.round(avg))+'<span style="color:var(--ink4)">'+'☆'.repeat(5-Math.round(avg))+'</span> '+avg
   }
   const listEl=$('store-reviews-list'); if(!listEl)return
-  listEl.innerHTML=storeRevs.length?storeRevs.sort((a,b)=>b.ts-a.ts).map(r=>`<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--ln2)">
+  listEl.innerHTML=storeRevs.length?storeRevs.map(r=>`<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--ln2)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--gp);color:var(--gr);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600">${r.name?r.name[0]:'C'}</div><span style="font-size:13px;font-weight:500">${r.name}</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--gp);color:var(--gr);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600">${r.client_name?r.client_name[0]:'C'}</div><span style="font-size:13px;font-weight:500">${r.client_name||'Client'}</span></div>
       <span style="font-size:1rem;color:#F5A623">${'★'.repeat(r.rating)}<span style="color:var(--ink4)">${'☆'.repeat(5-r.rating)}</span></span>
     </div>
     <div style="font-size:13px;font-weight:500;margin-bottom:3px">${r.title}</div>
     <div style="font-size:12px;color:var(--ink2);font-weight:300">${r.comment}</div>
-    <div style="font-size:11px;color:var(--ink3);margin-top:4px">${new Date(r.ts).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}</div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:4px">${new Date(r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'})}</div>
   </div>`).join(''):'<div style="padding:2rem;text-align:center;color:var(--ink3);font-size:13px;font-weight:300">Soyez le premier à laisser un avis !</div>'
 }
 
-// ═══ VENDOR NOTIF POLLING ═══
-let lastNotifTs=0
-function startNotifPolling() { setInterval(checkNotifs, 4000); setInterval(syncOrderStatuses, 5000); setInterval(renderAnnBanners, 15000) }
-function checkNotifs() {
-  if(!me)return
-  const notifs=JSON.parse(localStorage.getItem('fm_cnotifs')||'[]')
-  const myNotifs=notifs.filter(n=>{
-    const myOrders=getMyOrders()
-    return myOrders.find(o=>o.id===n.orderId)&&!n.read&&n.ts>lastNotifTs
-  })
-  if(myNotifs.length>0){
-    const latest=myNotifs[myNotifs.length-1]
-    lastNotifTs=latest.ts
-    showVN(latest)
-    $('nd').classList.add('on')
-  }
-  // Refresh catalogue si produits changés
-  renderCat()
+// ═══ NOTIF POLLING ═══
+let lastNotifId=0
+function startNotifPolling() {
+  setInterval(checkNotifs, 8000)
+  setInterval(syncOrderStatuses, 10000)
+  setInterval(renderAnnBanners, 30000)
+}
+async function checkNotifs() {
+  if(!me) return
+  try {
+    const notifs = await FM.getNotifications(me.email)
+    if(notifs.length>0){
+      const latest=notifs[0]
+      if(latest.id!==lastNotifId){
+        lastNotifId=latest.id
+        showVN(latest)
+        $('nd').classList.add('on')
+        // refresh orders silently
+        await syncOrderStatuses()
+        renderOrders()
+      }
+    }
+  } catch(e){}
 }
 function showVN(notif) {
   $('vn-t').textContent='Mise à jour de votre commande'
-  $('vn-b').textContent=notif.msg||'Votre commande a été mise à jour.'
+  $('vn-b').textContent=notif.message||notif.msg||'Votre commande a été mise à jour.'
   $('vn').classList.add('show'); setTimeout(()=>$('vn').classList.remove('show'),6000)
 }
 function closeVN() { $('vn').classList.remove('show') }
