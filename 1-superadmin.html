@@ -21,6 +21,11 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--tx);min-he
 .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;background:var(--surf);border:1px solid var(--ln2);border-radius:var(--rs);color:var(--tx);font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
 .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--gd)}
 .fld textarea{min-height:80px;resize:vertical}.fld-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stype-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.stype-chip{display:flex;align-items:center;gap:5px;padding:6px 11px;border:1px solid var(--ln2);border-radius:20px;font-size:11px;font-weight:500;color:var(--tx2);background:var(--surf);cursor:pointer;transition:all .15s;white-space:nowrap}
+.stype-chip:hover{border-color:var(--gd);color:var(--gr)}
+.stype-chip.sel{border-color:var(--gd);background:var(--gf);color:var(--gr);font-weight:600}
+.stype-chip.other-chip{border-style:dashed}
 .btn-g{width:100%;padding:11px;background:var(--gd);color:white;border:none;border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s}.btn-g:hover{background:#235e3c}
 .hint{font-size:11px;color:var(--tx3);text-align:center;margin-top:.75rem}
 .err{background:var(--rf);border:1px solid rgba(255,107,107,.2);border-radius:var(--rs);padding:8px 12px;color:var(--red);font-size:12px;margin-bottom:1rem;display:none}
@@ -246,6 +251,14 @@ tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)
         <div class="fld" style="margin:0"><label>Icône</label><input type="text" id="c-em" value="🏪" style="text-align:center;font-size:20px;padding:8px"></div>
         <div class="fld" style="margin:0"><label>Nom de la boutique *</label><input type="text" id="c-nm" placeholder="Ex: Épicerie Centrale"></div>
       </div>
+      <div class="fld">
+        <label>Type de boutique *</label>
+        <div class="stype-grid" id="c-type-grid"></div>
+        <div id="c-custom-wrap" style="display:none;margin-top:8px">
+          <input type="text" id="c-custom-type" placeholder="Décrivez votre type de boutique..." style="width:100%;padding:9px 12px;border:1.5px solid var(--ln);border-radius:var(--rs);font-family:inherit;font-size:13px;background:var(--surf);outline:none;color:var(--tx)" oninput="setCustomType(this.value,'c')">
+        </div>
+        <input type="hidden" id="c-type" value="Épicerie">
+      </div>
       <div class="fld-row"><div class="fld"><label>Prénom *</label><input type="text" id="c-fn" placeholder="Jean"></div><div class="fld"><label>Nom *</label><input type="text" id="c-ln" placeholder="Dupont"></div></div>
       <div class="fld"><label>Email (connexion admin) *</label><input type="email" id="c-email" placeholder="admin@boutique.com"></div>
       <div class="fld-row"><div class="fld"><label>Téléphone</label><input type="tel" id="c-tel" placeholder="+229 00 00 00 00"></div><div class="fld"><label>Mot de passe *</label><input type="password" id="c-pw" placeholder="min. 6 caractères"></div></div>
@@ -358,7 +371,7 @@ function renderStores(){
   $('sg').innerHTML=f.length?`<div class="sg">${f.map(s=>{
     const so=orders.filter(o=>o.storeId===s.id||(s.id==='store_1'&&!o.storeId))
     const rv=so.reduce((sum,o)=>sum+o.total,0),isPrem=Object.values(gprem(s.id)).some(v=>v)
-    return`<div class="sc">${isPrem?`<div style="position:absolute;top:10px;right:10px">${SL('pgold','✦ Premium')}</div>`:''}<div class="sc-em">${s.emoji||'🏪'}</div><div class="sc-nm">${s.name}</div><div class="sc-ow">${s.ownerName} · ${s.city}</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">${s.ownerEmail}</div><div class="sc-stats"><div><div class="sc-sv">${so.length}</div><div class="sc-sl">Cmdes</div></div><div><div class="sc-sv">${Math.round(rv/1000)}K F</div><div class="sc-sl">Revenus</div></div></div><div style="display:flex;gap:5px;margin-top:1rem;flex-wrap:wrap"><button class="act-b" onclick="viewStore('${s.id}')">Détails</button><button class="act-b ${s.active?'d':''}" onclick="toggleStore('${s.id}')">${s.active?'Suspendre':'Activer'}</button><button class="act-b" style="border-color:rgba(255,107,107,.3);color:var(--red)" onclick="delStore('${s.id}')">🗑</button></div></div>`
+    return`<div class="sc">${isPrem?`<div style="position:absolute;top:10px;right:10px">${SL('pgold','✦ Premium')}</div>`:''}<div class="sc-em">${s.emoji||'🏪'}</div><div class="sc-nm">${s.name}</div><div style="font-size:10px;font-weight:600;color:var(--gr);background:var(--gf);border:1px solid var(--gp);border-radius:10px;padding:2px 8px;display:inline-block;margin-bottom:3px">${s.storeType||'Épicerie'}</div><div class="sc-ow">${s.ownerName} · ${s.city}</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">${s.ownerEmail}</div><div class="sc-stats"><div><div class="sc-sv">${so.length}</div><div class="sc-sl">Cmdes</div></div><div><div class="sc-sv">${Math.round(rv/1000)}K F</div><div class="sc-sl">Revenus</div></div></div><div style="display:flex;gap:5px;margin-top:1rem;flex-wrap:wrap"><button class="act-b" onclick="viewStore('${s.id}')">Détails</button><button class="act-b ${s.active?'d':''}" onclick="toggleStore('${s.id}')">${s.active?'Suspendre':'Activer'}</button><button class="act-b" style="border-color:rgba(255,107,107,.3);color:var(--red)" onclick="delStore('${s.id}')">🗑</button></div></div>`
   }).join('')}</div>`:'<div style="text-align:center;padding:4rem;color:var(--tx3)">Aucune boutique trouvée</div>'
 }
 async function toggleStore(id){const s=GS().find(x=>x.id===id);if(!s)return;const nv=!s.active;await FM.toggleStore(id,nv);addAct(`Boutique "${s.name}" ${nv?'activée':'suspendue'}`,nv?'success':'warning');await loadAll();renderStores();renderOV();toast(`Boutique ${nv?'activée':'suspendue'}`)}
@@ -369,22 +382,57 @@ function viewStore(id){
   const orders=GO().filter(o=>o.storeId===id||(id==='store_1'&&!o.storeId)),rv=orders.reduce((sum,o)=>sum+o.total,0),p=gprem(id)
   const FN={stats:'📊 Stats',marketing:'🎯 Marketing',delivery:'🚚 Livraison+',ai:'🤖 IA',mobile:'📱 Mobile',multistore:'📦 Multi-sites'}
   $('sm-t').textContent=s.emoji+' '+s.name
-  $('sm-b').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem">${[['Propriétaire',s.ownerName],['Email',s.ownerEmail],['Tél.',s.ownerPhone||'—'],['Ville',s.city],['Commandes',orders.length],['Revenu',rv.toLocaleString('fr-FR')+' FCFA']].map(([l,v])=>`<div style="background:var(--surf);border:1px solid var(--ln);border-radius:var(--rs);padding:.875rem"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:500">${v}</div></div>`).join('')}</div><div style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.75rem">Fonctions Premium</div>${Object.keys(FN).map(f=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--ln)"><span style="font-size:13px;color:var(--tx2)">${FN[f]}</span><label class="tgl"><input type="checkbox" ${p[f]?'checked':''} onchange="toggleF('${id}','${f}',this.checked)"><span class="tsl"></span></label></div>`).join('')}<div style="display:flex;gap:8px;margin-top:1rem"><button class="btn-sm pri" style="flex:1;justify-content:center" onclick="enAll('${id}')">Tout activer</button><button class="btn-sm" style="flex:1;justify-content:center" onclick="disAll('${id}')">Désactiver</button></div><div style="margin-top:.75rem"><button class="btn-sm red" style="width:100%;justify-content:center" onclick="cSM();delStore('${id}')">🗑 Supprimer cette boutique</button></div>`
+  $('sm-b').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem">${[['Propriétaire',s.ownerName],['Type',s.storeType||'Épicerie'],['Email',s.ownerEmail],['Tél.',s.ownerPhone||'—'],['Ville',s.city],['Commandes',orders.length],['Revenu',rv.toLocaleString('fr-FR')+' FCFA']].map(([l,v])=>`<div style="background:var(--surf);border:1px solid var(--ln);border-radius:var(--rs);padding:.875rem"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:500">${v}</div></div>`).join('')}</div><div style="font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.75rem">Fonctions Premium</div>${Object.keys(FN).map(f=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--ln)"><span style="font-size:13px;color:var(--tx2)">${FN[f]}</span><label class="tgl"><input type="checkbox" ${p[f]?'checked':''} onchange="toggleF('${id}','${f}',this.checked)"><span class="tsl"></span></label></div>`).join('')}<div style="display:flex;gap:8px;margin-top:1rem"><button class="btn-sm pri" style="flex:1;justify-content:center" onclick="enAll('${id}')">Tout activer</button><button class="btn-sm" style="flex:1;justify-content:center" onclick="disAll('${id}')">Désactiver</button></div><div style="margin-top:.75rem"><button class="btn-sm red" style="width:100%;justify-content:center" onclick="cSM();delStore('${id}')">🗑 Supprimer cette boutique</button></div>`
   $('sm').classList.add('open')
 }
 function cSM(){$('sm').classList.remove('open')}
 
 // CREATE STORE
-function openCM(){$('cme').style.display='none';$('cm').classList.add('open')}
+// ── Types de boutique ──
+const STORE_TYPES=[
+  {emoji:'🛒',label:'Épicerie'},{emoji:'🥩',label:'Boucherie'},
+  {emoji:'🐟',label:'Poissonnerie'},{emoji:'🥦',label:'Primeur / Maraîcher'},
+  {emoji:'🥖',label:'Boulangerie'},{emoji:'🧁',label:'Pâtisserie'},
+  {emoji:'☕',label:'Café / Snack'},{emoji:'💊',label:'Pharmacie / Parapharmacie'},
+  {emoji:'👗',label:'Boutique de vêtements'},{emoji:'💄',label:'Cosmétiques / Beauté'},
+  {emoji:'🔧',label:'Quincaillerie'},{emoji:'📱',label:'Téléphonie / Électronique'},
+  {emoji:'🌿',label:'Herboristerie'},{emoji:'🍽️',label:'Restaurant'},
+  {emoji:'🏪',label:'Commerce général'},{emoji:'✏️',label:'Autre…'}
+]
+function buildStoreTypeGrid(prefix,selectedVal){
+  const grid=$(prefix+'-type-grid');if(!grid)return
+  const current=selectedVal||($(prefix+'-type')?.value)||'Épicerie'
+  grid.innerHTML=STORE_TYPES.map(t=>{
+    const isOther=t.label==='Autre…',isSel=!isOther&&current===t.label
+    return`<div class="stype-chip${isSel?' sel':''}${isOther?' other-chip':''}" onclick="pickStoreType('${prefix}','${t.label}',this)">${t.emoji} ${t.label}</div>`
+  }).join('')
+  const known=STORE_TYPES.map(t=>t.label).filter(l=>l!=='Autre…')
+  if(current&&!known.includes(current)){
+    $(prefix+'-custom-wrap').style.display='block'
+    const ci=$(prefix+'-custom-type');if(ci)ci.value=current
+    grid.querySelectorAll('.other-chip').forEach(c=>c.classList.add('sel'))
+  }
+}
+function pickStoreType(prefix,label,el){
+  const grid=$(prefix+'-type-grid'),cw=$(prefix+'-custom-wrap'),hi=$(prefix+'-type')
+  grid.querySelectorAll('.stype-chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel')
+  if(label==='Autre…'){cw.style.display='block';$(prefix+'-custom-type').focus();hi.value=$(prefix+'-custom-type').value||''}
+  else{cw.style.display='none';hi.value=label}
+}
+function setCustomType(val,prefix){$(prefix+'-type').value=val}
+
+function openCM(){$('cme').style.display='none';$('cm').classList.add('open');buildStoreTypeGrid('c','Épicerie')}
 function cCM(){$('cm').classList.remove('open')}
 async function createStore(){
   const nm=$('c-nm').value.trim(),fn=$('c-fn').value.trim(),ln=$('c-ln').value.trim(),email=$('c-email').value.trim(),pw=$('c-pw').value,city=$('c-city').value.trim()
+  const storeType=$('c-type').value||'Épicerie'
   if(!nm||!fn||!ln||!email||!pw||!city){$('cme').style.display='block';$('cme').textContent='Remplissez tous les champs obligatoires (*)';return}
   if(pw.length<6){$('cme').style.display='block';$('cme').textContent='Mot de passe trop court (min. 6)';return}
+  if(!storeType||storeType==='Autre…'){$('cme').style.display='block';$('cme').textContent='Précisez le type de la boutique';return}
   if(_admins.find(a=>a.email===email)){$('cme').style.display='block';$('cme').textContent='Email déjà utilisé';return}
   try{
     const sid='store_'+Date.now()
-    await FM.createStore({id:sid,name:nm,emoji:$('c-em').value||'🏪',ownerName:fn+' '+ln,ownerEmail:email,ownerPhone:$('c-tel').value.trim(),city,country:$('c-ctr').value,addr:$('c-addr').value.trim()})
+    await FM.createStore({id:sid,name:nm,emoji:$('c-em').value||'🏪',ownerName:fn+' '+ln,ownerEmail:email,ownerPhone:$('c-tel').value.trim(),city,country:$('c-ctr').value,addr:$('c-addr').value.trim(),storeType})
     await FM.createAdmin({fn,ln,email,password:pw,phone:$('c-tel').value.trim(),storeId:sid,storeName:nm})
     addAct(`Boutique créée : ${nm}`,'success')
     ;['c-nm','c-fn','c-ln','c-email','c-pw','c-city','c-addr','c-tel'].forEach(i=>$(i).value='');$('c-em').value='🏪'

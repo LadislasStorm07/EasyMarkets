@@ -151,6 +151,12 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 .wstep{display:none}.wstep.on{display:block;animation:fi .2s ease}
 .wnum{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
 .wtitle{font-size:1rem;font-weight:500;margin-bottom:1.25rem}
+/* Store type chips */
+.stype-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:2px}
+.stype-chip{display:flex;align-items:center;gap:5px;padding:7px 12px;border:1.5px solid var(--ln);border-radius:20px;font-size:12px;font-weight:500;color:var(--ink2);background:var(--bg);cursor:pointer;transition:all .15s;white-space:nowrap}
+.stype-chip:hover{border-color:var(--g2);color:var(--g2);background:var(--gf)}
+.stype-chip.sel{border-color:var(--g2);background:var(--gf);color:var(--g1);font-weight:600}
+.stype-chip.other-chip{border-style:dashed}
 .em-grid{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
 .eo{width:36px;height:36px;border:1.5px solid var(--ln);border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all .15s}
 .eo:hover,.eo.sel{border-color:var(--g2);background:var(--gf)}
@@ -338,6 +344,17 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
         <div class="wnum">Étape 2 / 3 — Votre boutique</div>
         <div class="wtitle">Créez votre boutique</div>
         <div class="fld"><label>Nom de la boutique *</label><input type="text" id="uv-sn" placeholder="Ex: Épicerie Centrale"></div>
+
+        <!-- TYPE DE BOUTIQUE -->
+        <div class="fld">
+          <label>Type de boutique *</label>
+          <div class="stype-grid" id="uv-type-grid"></div>
+          <div id="uv-custom-wrap" style="display:none;margin-top:8px">
+            <input type="text" id="uv-custom-type" placeholder="Décrivez votre type de boutique..." style="width:100%;padding:9px 12px;border:1.5px solid var(--ln);border-radius:var(--rs);font-family:inherit;font-size:13px;background:var(--bg);outline:none;color:var(--ink)" oninput="setCustomType(this.value,'uv')">
+          </div>
+          <input type="hidden" id="uv-type" value="Épicerie">
+        </div>
+
         <div class="fld">
           <label>Icône</label>
           <div class="em-grid" id="em-grid"></div>
@@ -651,10 +668,71 @@ async function regClient(){
   }
 }
 
+/* ══ STORE TYPE SELECTOR ══ */
+const STORE_TYPES=[
+  {emoji:'🛒',label:'Épicerie'},
+  {emoji:'🥩',label:'Boucherie'},
+  {emoji:'🐟',label:'Poissonnerie'},
+  {emoji:'🥦',label:'Primeur / Maraîcher'},
+  {emoji:'🥖',label:'Boulangerie'},
+  {emoji:'🧁',label:'Pâtisserie'},
+  {emoji:'☕',label:'Café / Snack'},
+  {emoji:'💊',label:'Pharmacie / Parapharmacie'},
+  {emoji:'👗',label:'Boutique de vêtements'},
+  {emoji:'💄',label:'Cosmétiques / Beauté'},
+  {emoji:'🔧',label:'Quincaillerie'},
+  {emoji:'📱',label:'Téléphonie / Électronique'},
+  {emoji:'🌿',label:'Herboristerie'},
+  {emoji:'🍽️',label:'Restaurant'},
+  {emoji:'🏪',label:'Commerce général'},
+  {emoji:'✏️',label:'Autre…'}
+]
+
+function buildStoreTypeGrid(prefix, selectedVal){
+  const grid=document.getElementById(prefix+'-type-grid')
+  if(!grid)return
+  const current=selectedVal||document.getElementById(prefix+'-type')?.value||'Épicerie'
+  grid.innerHTML=STORE_TYPES.map(t=>{
+    const isOther=t.label==='Autre…'
+    const isSel=!isOther&&current===t.label
+    return`<div class="stype-chip${isSel?' sel':''}${isOther?' other-chip':''}" onclick="pickStoreType('${prefix}','${t.label}',this)">${t.emoji} ${t.label}</div>`
+  }).join('')
+  // Si la valeur actuelle n'est pas dans la liste prédéfinie, montrer le champ custom
+  const known=STORE_TYPES.map(t=>t.label).filter(l=>l!=='Autre…')
+  if(current&&!known.includes(current)){
+    document.getElementById(prefix+'-custom-wrap').style.display='block'
+    const ci=document.getElementById(prefix+'-custom-type')
+    if(ci)ci.value=current
+    // marquer "Autre" comme sélectionné
+    grid.querySelectorAll('.other-chip').forEach(c=>c.classList.add('sel'))
+  }
+}
+
+function pickStoreType(prefix, label, el){
+  const grid=document.getElementById(prefix+'-type-grid')
+  const customWrap=document.getElementById(prefix+'-custom-wrap')
+  const hiddenInput=document.getElementById(prefix+'-type')
+  grid.querySelectorAll('.stype-chip').forEach(c=>c.classList.remove('sel'))
+  el.classList.add('sel')
+  if(label==='Autre…'){
+    customWrap.style.display='block'
+    document.getElementById(prefix+'-custom-type').focus()
+    hiddenInput.value=document.getElementById(prefix+'-custom-type').value||''
+  } else {
+    customWrap.style.display='none'
+    hiddenInput.value=label
+  }
+}
+
+function setCustomType(val, prefix){
+  document.getElementById(prefix+'-type').value=val
+}
+
 /* ══ VENDOR WIZARD ══ */
 function buildEmojis(){
   document.getElementById('em-grid').innerHTML=EMOJIS.map(e=>`<div class="eo ${e==='🏪'?'sel':''}" onclick="pickEm('${e}')">${e}</div>`).join('')
   wizEm='🏪';document.getElementById('uv-em').value='🏪'
+  buildStoreTypeGrid('uv','Épicerie')
 }
 function pickEm(e){
   wizEm=e;document.getElementById('uv-em').value=e
@@ -679,8 +757,11 @@ function wNext(step){
     const sn=document.getElementById('uv-sn').value.trim()
     const city=document.getElementById('uv-city').value.trim()
     if(!sn||!city){showErr('Nom de boutique et ville sont obligatoires');return}
+    const storeType=document.getElementById('uv-type').value||'Épicerie'
+    if(!storeType||storeType==='Autre…'){showErr('Précisez le type de votre boutique');return}
     document.getElementById('wiz-summ').innerHTML=
       `Boutique : <strong>${sn}</strong><br>`+
+      `Type : <strong>${storeType}</strong><br>`+
       `Icône : ${document.getElementById('uv-em').value||'🏪'}<br>`+
       `Ville : ${city}, ${document.getElementById('uv-ctr').value}<br>`+
       `Propriétaire : <strong>${document.getElementById('uv-fn').value} ${document.getElementById('uv-ln').value}</strong><br>`+
@@ -703,7 +784,7 @@ async function regVendor(){
   const addr=document.getElementById('uv-addr').value.trim()
   try {
     const sid='store_'+Date.now()
-    await FM.createStore({id:sid,name:sn,emoji:em,ownerName:fn+' '+ln,ownerEmail:email,ownerPhone:tel,city,country:ctr,addr})
+    await FM.createStore({id:sid,name:sn,emoji:em,ownerName:fn+' '+ln,ownerEmail:email,ownerPhone:tel,city,country:ctr,addr,storeType:document.getElementById('uv-type').value||'Épicerie'})
     const adminRow=await FM.createAdmin({fn,ln,email,phone:tel,password:pass,storeId:sid,storeName:sn})
     FM.logActivity(`Nouvelle boutique : ${sn} par ${fn} ${ln}`,'success')
     sessionStorage.setItem('fm_me',JSON.stringify(FM.adaptAdmin(adminRow)))

@@ -40,6 +40,11 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);-webk
 .stitle{font-size:1.05rem;font-weight:500;margin-bottom:1.25rem}
 .fld{margin-bottom:1rem}
 .fld label{display:block;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.stype-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.stype-chip{display:flex;align-items:center;gap:5px;padding:6px 12px;border:1.5px solid var(--ln2);border-radius:20px;font-size:12px;font-weight:500;color:var(--ink3);background:var(--bg);cursor:pointer;transition:all .15s;white-space:nowrap}
+.stype-chip:hover{border-color:var(--gm);color:var(--gr);background:var(--gf)}
+.stype-chip.sel{border-color:var(--gr);background:var(--gf);color:var(--gr);font-weight:600}
+.stype-chip.other-chip{border-style:dashed}
 .fld input,.fld select,.fld textarea{width:100%;padding:9px 12px;border:1px solid var(--ln);border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:14px;color:var(--ink);background:var(--bg);outline:none;transition:border-color .15s}
 .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--gm);background:var(--wh)}
 .fld textarea{resize:vertical;min-height:70px}
@@ -284,7 +289,7 @@ tr:hover td{background:var(--bg)}
     <div class="sb-top">
       <div>
         <div class="sb-sn" id="sb-sn">Fresh<span>Mart</span></div>
-        <div class="sb-sr">Dashboard vendeur</div>
+        <div id="sb-type-badge" style="display:inline-block;font-size:10px;font-weight:700;color:var(--gr);background:var(--gf);border:1px solid var(--gp);border-radius:10px;padding:2px 8px;margin-top:3px">Épicerie</div>
       </div>
       <button class="sb-x" id="sb-x">✕</button>
     </div>
@@ -300,6 +305,7 @@ tr:hover td{background:var(--bg)}
       <button class="si" data-sec="reviews"><div class="si-l"><span class="ic">⭐</span>Avis & Notes</div></button>
       <button class="si" data-sec="announcements"><div class="si-l"><span class="ic">📢</span>Annonces</div></button>
       <button class="si" data-sec="premium"><div class="si-l"><span class="ic">✦</span>Premium</div></button>
+      <button class="si" data-sec="settings"><div class="si-l"><span class="ic">⚙️</span>Ma boutique</div></button>
       <div class="sb-sep"></div>
       <button class="si" id="btn-scanner"><div class="si-l"><span class="ic">⊡</span>Scanner QR</div></button>
       <button class="si" id="btn-pdf"><div class="si-l"><span class="ic">⬡</span>Rapport PDF</div></button>
@@ -439,6 +445,46 @@ tr:hover td{background:var(--bg)}
     <div class="sec" id="sec-premium">
       <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;margin-bottom:1rem">✦ Fonctions Premium</h2>
       <div id="prem-content"></div>
+    </div>
+
+    <!-- ═══ PARAMÈTRES BOUTIQUE ═══ -->
+    <div class="sec" id="sec-settings">
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;margin-bottom:1.5rem">⚙️ Ma boutique</h2>
+      <div style="max-width:560px">
+
+        <!-- Infos actuelles -->
+        <div id="store-info-card" style="background:var(--wh);border:1px solid var(--ln2);border-radius:var(--r);padding:1.25rem;margin-bottom:1.5rem"></div>
+
+        <!-- Modifier le type -->
+        <div style="background:var(--wh);border:1px solid var(--ln2);border-radius:var(--r);padding:1.25rem;margin-bottom:1rem">
+          <div style="font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:1rem">Type de boutique</div>
+          <div class="stype-grid" id="s-type-grid"></div>
+          <div id="s-custom-wrap" style="display:none;margin-top:8px">
+            <input type="text" id="s-custom-type" placeholder="Décrivez votre type de boutique..."
+              style="width:100%;padding:9px 12px;border:1.5px solid var(--ln2);border-radius:var(--rs);font-family:inherit;font-size:13px;background:var(--bg);outline:none;color:var(--ink)"
+              oninput="setCustomType(this.value,'s')">
+          </div>
+          <input type="hidden" id="s-type" value="">
+          <button class="btn-sm pri" style="margin-top:1rem" onclick="saveStoreType()">Enregistrer le type</button>
+        </div>
+
+        <!-- Modifier le nom et l'emoji -->
+        <div style="background:var(--wh);border:1px solid var(--ln2);border-radius:var(--r);padding:1.25rem">
+          <div style="font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:1rem">Nom &amp; icône</div>
+          <div style="display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:end;margin-bottom:.75rem">
+            <div class="fld" style="margin:0"><label>Icône</label><input type="text" id="s-emoji" style="text-align:center;font-size:20px;padding:8px"></div>
+            <div class="fld" style="margin:0"><label>Nom de la boutique</label><input type="text" id="s-name" placeholder="Nom de votre boutique"></div>
+          </div>
+          <div class="fld" style="margin-bottom:.75rem"><label>Adresse</label><input type="text" id="s-addr" placeholder="Quartier, rue..."></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.75rem">
+            <div class="fld" style="margin:0"><label>Ville</label><input type="text" id="s-city" placeholder="Cotonou"></div>
+            <div class="fld" style="margin:0"><label>Pays</label>
+              <select id="s-country"><option>Bénin</option><option>Togo</option><option>Nigeria</option><option>Ghana</option><option>Côte d'Ivoire</option><option>Sénégal</option><option>France</option></select>
+            </div>
+          </div>
+          <button class="btn-sm pri" onclick="saveStoreInfo()">Enregistrer les modifications</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -635,6 +681,8 @@ async function bootDash() {
   await loadVendeurData();
   var store = myStore();
   $('sb-sn').innerHTML = (store ? store.name : 'FreshMart').replace(/(\S+)$/, '<span>$1</span>');
+  var typeBadge = $('sb-type-badge');
+  if(typeBadge) typeBadge.textContent = store ? (store.storeType||'Épicerie') : 'Épicerie';
   $('sb-av').textContent = (me.fn[0] + me.ln[0]).toUpperCase();
   $('sb-un').textContent = me.fn + ' ' + me.ln;
   $('sb-ur').textContent = store ? store.name : 'Vendeur';
@@ -655,9 +703,10 @@ function goSec(id) {
   if (el) el.classList.add('active');
   var btn = document.querySelector('.si[data-sec="' + id + '"]');
   if (btn) btn.classList.add('active');
-  var titles = {overview:'Vue d\'ensemble',products:'Produits',orders:'Commandes',history:'Historique des ventes',reservations:'Réservations',invoices:'Factures',clients:'Clients',reviews:'Avis & Notes',announcements:'Annonces',premium:'Fonctions Premium'};
+  var titles = {overview:'Vue d\'ensemble',products:'Produits',orders:'Commandes',history:'Historique des ventes',reservations:'Réservations',invoices:'Factures',clients:'Clients',reviews:'Avis & Notes',announcements:'Annonces',premium:'Fonctions Premium',settings:'⚙️ Ma boutique'};
   $('tb-t').textContent = titles[id] || id;
   $('ta').style.display = id === 'products' ? 'flex' : 'none';
+  if (id === 'settings') renderSettings();
   closeSB();
 }
 function openSB() { $('sb').classList.add('open'); $('sbov').classList.add('open'); }
@@ -1180,6 +1229,93 @@ async function submitVendorReview() {
   if(!title||!comment){showToast('Remplissez titre et commentaire');return;}
   await FM.saveVendorReview({email:me.email,storeName:myStore()?myStore().name:'',rating:vendorStarRating,title:title,comment:comment});
   showToast('Avis publié ! Merci 🙏'); renderReviews();
+}
+
+// ─── PARAMÈTRES BOUTIQUE ───
+var STORE_TYPES=[
+  {emoji:'🛒',label:'Épicerie'},{emoji:'🥩',label:'Boucherie'},
+  {emoji:'🐟',label:'Poissonnerie'},{emoji:'🥦',label:'Primeur / Maraîcher'},
+  {emoji:'🥖',label:'Boulangerie'},{emoji:'🧁',label:'Pâtisserie'},
+  {emoji:'☕',label:'Café / Snack'},{emoji:'💊',label:'Pharmacie / Parapharmacie'},
+  {emoji:'👗',label:'Boutique de vêtements'},{emoji:'💄',label:'Cosmétiques / Beauté'},
+  {emoji:'🔧',label:'Quincaillerie'},{emoji:'📱',label:'Téléphonie / Électronique'},
+  {emoji:'🌿',label:'Herboristerie'},{emoji:'🍽️',label:'Restaurant'},
+  {emoji:'🏪',label:'Commerce général'},{emoji:'✏️',label:'Autre…'}
+]
+
+function buildStoreTypeGrid(prefix, selectedVal) {
+  var grid = $(prefix+'-type-grid'); if(!grid) return;
+  var current = selectedVal || ($(prefix+'-type') ? $(prefix+'-type').value : '') || 'Épicerie';
+  grid.innerHTML = STORE_TYPES.map(function(t){
+    var isOther = t.label==='Autre…', isSel = !isOther && current===t.label;
+    return '<div class="stype-chip'+(isSel?' sel':'')+(isOther?' other-chip':'')+'" onclick="pickStoreType(\''+prefix+'\',\''+t.label+'\',this)">'+t.emoji+' '+t.label+'</div>';
+  }).join('');
+  var known = STORE_TYPES.map(function(t){return t.label;}).filter(function(l){return l!=='Autre…';});
+  if(current && !known.includes(current)) {
+    $(prefix+'-custom-wrap').style.display = 'block';
+    var ci = $(prefix+'-custom-type'); if(ci) ci.value = current;
+    grid.querySelectorAll('.other-chip').forEach(function(c){c.classList.add('sel');});
+  }
+}
+
+function pickStoreType(prefix, label, el) {
+  var grid = $(prefix+'-type-grid'), cw = $(prefix+'-custom-wrap'), hi = $(prefix+'-type');
+  grid.querySelectorAll('.stype-chip').forEach(function(c){c.classList.remove('sel');}); el.classList.add('sel');
+  if(label==='Autre…') { cw.style.display='block'; $(prefix+'-custom-type').focus(); hi.value=$(prefix+'-custom-type').value||''; }
+  else { cw.style.display='none'; hi.value=label; }
+}
+
+function setCustomType(val, prefix) { $(prefix+'-type').value=val; }
+
+function renderSettings() {
+  var store = myStore();
+  var card = $('store-info-card'); if(!card) return;
+  var st = store ? (store.storeType||'Épicerie') : 'Épicerie';
+  card.innerHTML = '<div style="display:flex;align-items:center;gap:14px">'
+    +'<div style="font-size:2.5rem">'+(store?store.emoji:'🏪')+'</div>'
+    +'<div><div style="font-size:16px;font-weight:600;color:var(--ink)">'+(store?store.name:'—')+'</div>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--gr);background:var(--gf);border:1px solid var(--gp);border-radius:10px;padding:2px 10px;display:inline-block;margin-top:4px">'+st+'</div>'
+    +'<div style="font-size:12px;color:var(--ink3);margin-top:4px">'+(store?(store.city+(store.country?', '+store.country:'')):'—')+'</div></div></div>';
+  // Pré-remplir les champs
+  if(store) {
+    $('s-name').value = store.name||'';
+    $('s-emoji').value = store.emoji||'🏪';
+    $('s-addr').value = store.addr||'';
+    $('s-city').value = store.city||'';
+    var sc = $('s-country');
+    if(sc && store.country) { Array.from(sc.options).forEach(function(o){if(o.value===store.country||o.text===store.country)o.selected=true;}); }
+    $('s-type').value = st;
+  }
+  buildStoreTypeGrid('s', st);
+}
+
+async function saveStoreType() {
+  var val = $('s-type').value;
+  if(!val || val==='Autre…') { showToast('Précisez le type de votre boutique'); return; }
+  try {
+    await FM.updateStore(me.storeId, { store_type: val });
+    if(_myStoreData) _myStoreData.storeType = val;
+    var typeBadge = $('sb-type-badge');
+    if(typeBadge) typeBadge.textContent = val;
+    showToast('Type mis à jour : '+val+' ✓');
+    renderSettings();
+  } catch(err) { showToast('Erreur: '+err.message); }
+}
+
+async function saveStoreInfo() {
+  var name = $('s-name').value.trim(), emoji = $('s-emoji').value.trim();
+  var addr = $('s-addr').value.trim(), city = $('s-city').value.trim();
+  var country = $('s-country').value;
+  if(!name) { showToast('Le nom ne peut pas être vide'); return; }
+  try {
+    await FM.updateStore(me.storeId, { name:name, emoji:emoji||'🏪', address:addr, city:city, country:country });
+    if(_myStoreData) { _myStoreData.name=name; _myStoreData.emoji=emoji; _myStoreData.addr=addr; _myStoreData.city=city; _myStoreData.country=country; }
+    // Mettre à jour l'affichage du nom dans la sidebar
+    $('sb-sn').innerHTML = name.replace(/(\S+)$/, '<span>$1</span>');
+    $('sb-ur').textContent = name;
+    showToast('Boutique mise à jour ✓');
+    renderSettings();
+  } catch(err) { showToast('Erreur: '+err.message); }
 }
 
 // ─── PREMIUM ───

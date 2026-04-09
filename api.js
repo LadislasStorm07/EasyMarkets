@@ -92,7 +92,8 @@ var FM = {
     return SB.insert('stores', {
       id: d.id || ('store_' + Date.now()), name: d.name, emoji: d.emoji || '🏪',
       owner_name: d.ownerName, owner_email: d.ownerEmail, owner_phone: d.ownerPhone,
-      city: d.city, country: d.country || 'Bénin', address: d.addr, active: true
+      city: d.city, country: d.country || 'Bénin', address: d.addr,
+      store_type: d.storeType || 'Épicerie', active: true
     });
   },
   updateStore: function(id, d) { return SB.update('stores', id, d); },
@@ -290,7 +291,7 @@ var FM = {
     return { id:r.id, fn:r.first_name, ln:r.last_name, email:r.email, phone:r.phone, storeId:r.store_id, storeName:r.store_name, createdAt:r.created_at };
   },
   adaptStore: function(r) {
-    return { id:r.id, name:r.name, emoji:r.emoji, ownerName:r.owner_name, ownerEmail:r.owner_email, ownerPhone:r.owner_phone, city:r.city, country:r.country, addr:r.address, active:r.active, createdAt:r.created_at };
+    return { id:r.id, name:r.name, emoji:r.emoji, ownerName:r.owner_name, ownerEmail:r.owner_email, ownerPhone:r.owner_phone, city:r.city, country:r.country, addr:r.address, storeType:r.store_type||'Épicerie', active:r.active, createdAt:r.created_at };
   }
 };
 
