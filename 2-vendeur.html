@@ -6,8 +6,10 @@
 <title>FreshMart — Dashboard Vendeur</title>
 <script src="api.js"></script>
 <script src="theme.js"></script>
+<script src="location.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="invoice.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
@@ -186,6 +188,7 @@ tr:hover td{background:var(--bg)}
 .ann-item.info{border-left:3px solid var(--bl)}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:white;padding:9px 18px;border-radius:30px;font-size:12px;z-index:999;transition:all .3s;opacity:0;pointer-events:none;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+/* ── Responsive complet ── */
 @media(max-width:900px){
   .ham{display:flex}
   .sb{transform:translateX(-100%)}
@@ -196,8 +199,32 @@ tr:hover td{background:var(--bg)}
   .kpis{grid-template-columns:1fr 1fr}
   .two-col{grid-template-columns:1fr}
   .fld-row{grid-template-columns:1fr}
+  .inv-card{flex-direction:column;align-items:flex-start;gap:.75rem}
+  .act-row{flex-wrap:wrap}
 }
-@media(max-width:480px){.kpis{grid-template-columns:1fr 1fr}.sec{padding:1rem}}
+@media(max-width:640px){
+  .sec{padding:1rem .875rem}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{padding:.875rem 1rem}
+  .kpi-v{font-size:1.5rem}
+  .topbar{padding:0 .875rem 0 60px}
+  table{font-size:11px}
+  th,td{padding:7px 6px}
+  .tbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .rvc{overflow-x:auto}
+  .rcc{min-width:28px}
+  .ov{padding:.5rem}
+  .mbox{border-radius:16px 16px 0 0;max-height:96vh;margin-top:auto;width:100%;max-width:100%}
+  .ov.open{align-items:flex-end}
+  .scan-area{max-width:220px}
+  .sb-top{padding:1rem}
+}
+@media(max-width:420px){
+  .kpis{grid-template-columns:1fr}
+  .act-row{gap:4px}
+  .act-b{padding:5px 10px;font-size:11px}
+  .sec{padding:.875rem .75rem}
+}
 </style>
 </head>
 <body>
@@ -482,7 +509,28 @@ tr:hover td{background:var(--bg)}
               <select id="s-country"><option>Bénin</option><option>Togo</option><option>Nigeria</option><option>Ghana</option><option>Côte d'Ivoire</option><option>Sénégal</option><option>France</option></select>
             </div>
           </div>
+          <div class="fld" style="margin-bottom:.75rem">
+            <label>📲 Numéro WhatsApp <span style="font-weight:300;text-transform:none;letter-spacing:0">— pour recevoir les commandes</span></label>
+            <input type="tel" id="s-whatsapp" placeholder="+229 00 00 00 00">
+            <div style="font-size:11px;color:var(--ink3);margin-top:4px">Entrez le numéro au format international ex: +22997000001</div>
+          </div>
           <button class="btn-sm pri" onclick="saveStoreInfo()">Enregistrer les modifications</button>
+        </div>
+
+        <!-- LOCALISATION BOUTIQUE -->
+        <div style="background:var(--wh);border:1px solid var(--ln2);border-radius:var(--r);padding:1.25rem;margin-top:1rem">
+          <div style="font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:.875rem">📍 Localisation de ma boutique</div>
+          <div id="fm-loc-error" class="fm-loc-error"></div>
+          <div id="vendor-loc-bar" class="fm-loc-bar" style="display:none">
+            <div class="fm-loc-dot"></div>
+            <div><div style="font-weight:500">Position enregistrée</div><div id="vendor-loc-coords" class="fm-loc-coords"></div></div>
+          </div>
+          <div id="vendor-map" class="fm-map" style="margin-bottom:.875rem;display:none"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="fm-loc-btn" onclick="startVendorLocation()">📡 Localiser ma boutique</button>
+            <button class="btn-sm" onclick="refreshVendorMap()" style="display:none" id="btn-refresh-map">🔄 Actualiser</button>
+          </div>
+          <div style="font-size:10px;color:var(--ink3);margin-top:6px">La position de votre boutique aide les clients à vous trouver.</div>
         </div>
       </div>
     </div>
@@ -686,6 +734,16 @@ async function bootDash() {
   $('sb-av').textContent = (me.fn[0] + me.ln[0]).toUpperCase();
   $('sb-un').textContent = me.fn + ' ' + me.ln;
   $('sb-ur').textContent = store ? store.name : 'Vendeur';
+  // ── Localisation vendeur ──
+  if (window.FMLocation) {
+    FMLocation.init('vendor', me.id);
+    FMLocation.onChange(function(coords) {
+      var bar = document.getElementById('vendor-loc-bar');
+      var coordEl = document.getElementById('vendor-loc-coords');
+      if (bar) bar.style.display = 'flex';
+      if (coordEl) coordEl.textContent = coords.lat.toFixed(5) + ', ' + coords.lng.toFixed(5) + ' (±' + coords.accuracy + 'm)';
+    });
+  }
   renderAll();
   startPolling();
   setHistPeriod(30);
@@ -910,250 +968,9 @@ function renderInv() {
 function dlInv(oid) {
   var o = GO().find(function(x){ return x.id === oid; });
   if (!o) return;
-  var store = myStore();
-  var jspdf  = window.jspdf;
-  var doc    = new jspdf.jsPDF({ unit:'mm', format:'a4' });
-  var PW = 210, PH = 297;
-
-  // ── Palette ──
-  var G   = [27,  99,  50];   // vert foncé
-  var G2  = [45, 106,  79];   // vert moyen
-  var GL  = [216,243,220];    // vert clair
-  var W   = [255,255,255];
-  var INK = [17,  22,  18];
-  var INK2= [61,  73,  64];
-  var INK3= [122,140,128];
-  var LN  = [227,234,229];
-  var BG  = [247,249,247];
-  var OR  = [180, 83,  9];
-
-  // ── Helpers ──
-  function setC(c){ doc.setTextColor(c[0],c[1],c[2]); }
-  function setF(c){ doc.setFillColor(c[0],c[1],c[2]); }
-  function setDC(c){ doc.setDrawColor(c[0],c[1],c[2]); }
-  function line(x1,y1,x2,y2){ doc.line(x1,y1,x2,y2); }
-  function rect(x,y,w,h,fill){ doc.rect(x,y,w,h,fill||'F'); }
-  function txt(text,x,y,opts){ doc.text(String(text),x,y,opts||{}); }
-
-  var sn = store ? store.name : 'FreshMart';
-  var sc = store ? (store.city+', '+(store.country||'')) : '';
-  var sa = store ? (store.addr||'') : '';
-  var sp = store ? (store.ownerPhone||'') : '';
-  var se = store ? (store.ownerEmail||'') : '';
-  var invNum  = 'FM-' + o.id.slice(-8).toUpperCase();
-  var invDate = new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-  var dueDate = new Date(new Date(o.createdAt).getTime()+30*864e5).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-  var statusLabel = {pending:'En attente',confirmed:'Confirmée',delivered:'Livrée'}[o.status]||o.status;
-  var statusColor = o.status==='delivered'?[30,64,175]:o.status==='confirmed'?G:OR;
-
-  // ══════════════════════════════════════════
-  // ZONE 1 — EN-TÊTE (0→55mm)
-  // ══════════════════════════════════════════
-
-  // Fond vert plein
-  setF(G); rect(0,0,PW,55);
-
-  // Accent décoratif angle bas-droit
-  setF(G2);
-  doc.triangle(PW-55,55, PW,55, PW,0,'F');
-
-  // Logo / nom boutique
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(22);
-  txt(sn, 16, 22);
-
-  // Sous-titre boutique
-  doc.setFont('helvetica','normal'); doc.setFontSize(9);
-  setC(GL);
-  txt(sc, 16, 30);
-  if(sa) txt(sa, 16, 36);
-  if(sp) txt(sp, 16, 42);
-  if(se) txt(se, 16, 48);
-
-  // Mot "FACTURE" à droite
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(28);
-  txt('FACTURE', PW-16, 24, {align:'right'});
-
-  // Numéro & date sous "FACTURE"
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); setC(GL);
-  txt(invNum, PW-16, 33, {align:'right'});
-  txt(invDate, PW-16, 40, {align:'right'});
-
-  // ══════════════════════════════════════════
-  // ZONE 2 — BANDE INFO (55→85mm)
-  // ══════════════════════════════════════════
-
-  setF(BG); rect(0,55,PW,30);
-  setDC(LN); doc.setLineWidth(0.2);
-
-  // Bloc "Facturer à"
-  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
-  txt('FACTURER À', 16, 66);
-  setC(INK); doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  txt(o.customer ? o.customer.name : '—', 16, 74);
-  setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-  if(o.customer && o.customer.phone) txt(o.customer.phone, 16, 80);
-  if(o.customer && o.customer.addr)  txt(o.customer.addr,  16, 85);
-
-  // Séparateur vertical
-  setF(LN); rect(105,58,0.4,24);
-
-  // Bloc statut + échéance
-  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
-  txt('STATUT', 112, 66);
-  // Badge statut coloré
-  setF(statusColor); rect(112,68,28,7,undefined); doc.roundedRect(112,68,28,7,2,2,'F');
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
-  txt(statusLabel.toUpperCase(), 126, 73.5, {align:'center'});
-
-  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
-  txt('DATE D\'ÉCHÉANCE', 150, 66);
-  setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-  txt(dueDate, 150, 73);
-
-  // Livraison
-  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
-  txt('MODE', 150, 80);
-  setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-  txt(o.delType==='delivery'?'Livraison à domicile':'Retrait en boutique', 150, 87);
-
-  // ══════════════════════════════════════════
-  // ZONE 3 — TABLEAU ARTICLES
-  // ══════════════════════════════════════════
-
-  var y = 100;
-
-  // En-tête tableau
-  setF(G); rect(14,y-5,182,9);
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(8);
-  var cols = [16,90,120,148,175];
-  var headers = ['DESCRIPTION','QTÉ','PRIX UNIT.','REMISE','TOTAL'];
-  headers.forEach(function(h,i){ txt(h, cols[i], y+1); });
-  y += 9;
-
-  // Lignes articles
-  var items = o.items || [];
-  items.forEach(function(it, i) {
-    if (y > 240) {
-      doc.addPage();
-      // Mini en-tête sur nouvelle page
-      setF(G); rect(14,15,182,9);
-      setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(8);
-      headers.forEach(function(h,j){ txt(h, cols[j], 21); });
-      y = 30;
-    }
-    var rowBg = i % 2 === 0 ? BG : W;
-    setF(rowBg); rect(14,y-5,182,11);
-
-    // Ligne fine de séparation
-    setF(LN); rect(14,y+6,182,0.3);
-
-    var unitPrice = it.price || 0;
-    var originalPrice = it.originalPrice || unitPrice;
-    var qty = it.qty || 1;
-    var discount = originalPrice > unitPrice ? (originalPrice - unitPrice) * qty : 0;
-    var lineTotal = unitPrice * qty;
-
-    setC(INK); doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    // Emoji + nom
-    txt((it.emoji||'') + ' ' + it.name.slice(0,32), cols[0], y+2);
-    // Quantité
-    doc.setFont('helvetica','bold');
-    txt(String(qty), cols[1], y+2);
-    // Prix unitaire
-    doc.setFont('helvetica','normal'); setC(INK2);
-    txt(unitPrice.toLocaleString('fr-FR')+' F', cols[2], y+2);
-    // Remise
-    if(discount > 0){ setC(OR); txt('-'+discount.toLocaleString('fr-FR')+' F', cols[3], y+2); }
-    else { setC(INK3); txt('—', cols[3], y+2); }
-    // Total ligne
-    setC(INK); doc.setFont('helvetica','bold');
-    txt(lineTotal.toLocaleString('fr-FR')+' F', PW-16, y+2, {align:'right'});
-
-    y += 12;
-  });
-
-  // ══════════════════════════════════════════
-  // ZONE 4 — TOTAUX
-  // ══════════════════════════════════════════
-  y += 4;
-
-  // Ligne de séparation
-  setF(LN); rect(14,y,182,0.4); y += 6;
-
-  // Sous-total
-  var subtotal = items.reduce(function(s,it){ return s+(it.originalPrice||it.price)*it.qty; },0);
-  var totalDiscount = subtotal - o.total;
-
-  var totRows = [
-    ['Sous-total', subtotal.toLocaleString('fr-FR')+' FCFA', INK2, false],
-  ];
-  if(totalDiscount > 0) {
-    totRows.push(['Remises totales', '-'+totalDiscount.toLocaleString('fr-FR')+' FCFA', OR, false]);
-  }
-  if(o.deliveryFee) {
-    totRows.push(['Frais de livraison', o.deliveryFee.toLocaleString('fr-FR')+' FCFA', INK2, false]);
-  }
-
-  totRows.forEach(function(row) {
-    doc.setFont('helvetica', row[3]?'bold':'normal'); doc.setFontSize(9.5);
-    setC(INK3); txt(row[0], 120, y);
-    setC(row[2]); txt(row[1], PW-16, y, {align:'right'});
-    y += 8;
-  });
-
-  // Bloc TOTAL
-  y += 2;
-  setF(G); rect(100,y-6,PW-100-14,16);
-  setC(GL); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-  txt('TOTAL TTC', 106, y+2);
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(14);
-  txt(o.total.toLocaleString('fr-FR')+' FCFA', PW-16, y+4, {align:'right'});
-  y += 22;
-
-  // ══════════════════════════════════════════
-  // ZONE 5 — NOTE CLIENT
-  // ══════════════════════════════════════════
-  if (o.note && o.note.trim()) {
-    setF([255,251,235]); rect(14,y,182,16);
-    setF([180,83,9]); rect(14,y,2,16);
-    setC(OR); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
-    txt('NOTE DU CLIENT', 20,y+6);
-    setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-    txt(o.note.slice(0,90), 20, y+12);
-    y += 22;
-  }
-
-  // ══════════════════════════════════════════
-  // ZONE 6 — PIED DE PAGE
-  // ══════════════════════════════════════════
-  var footerY = PH - 22;
-
-  // Ligne décorative
-  setF(G); rect(0,footerY-2,PW,0.6);
-  // Accent gauche
-  setF(GL); rect(0,footerY-2,40,0.6);
-
-  setC(INK3); doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
-  txt('Merci pour votre confiance — '+sn, PW/2, footerY+4, {align:'center'});
-  setC(INK3); doc.setFontSize(7);
-  txt(sc + (sp?' · '+sp:''), PW/2, footerY+10, {align:'center'});
-
-  // Numéro de page
-  setC(INK3); doc.setFontSize(7);
-  txt('Facture '+invNum+' · Générée le '+new Date().toLocaleDateString('fr-FR'), PW-16, footerY+10, {align:'right'});
-
-  // ══════════════════════════════════════════
-  // Numéroter toutes les pages
-  // ══════════════════════════════════════════
-  var pc = doc.internal.getNumberOfPages();
-  for (var i = 1; i <= pc; i++) {
-    doc.setPage(i);
-    setC(INK3); doc.setFont('helvetica','normal'); doc.setFontSize(7);
-    txt('Page '+i+'/'+pc, 16, footerY+10);
-  }
-
-  doc.save('facture-'+invNum+'.pdf');
-  showToast('Facture téléchargée ✓');
+  if (!window.FMInvoice) { showToast('Module facture non charge'); return; }
+  var invNum = FMInvoice.generate(o, myStore(), null);
+  if (invNum) showToast('Facture ' + invNum + ' telechargee');
 }
 
 // ─── CLIENTS ───
@@ -1285,6 +1102,7 @@ function renderSettings() {
     var sc = $('s-country');
     if(sc && store.country) { Array.from(sc.options).forEach(function(o){if(o.value===store.country||o.text===store.country)o.selected=true;}); }
     $('s-type').value = st;
+    var sw = $('s-whatsapp'); if(sw) sw.value = store.whatsappPhone||store.ownerPhone||'';
   }
   buildStoreTypeGrid('s', st);
 }
@@ -1306,16 +1124,37 @@ async function saveStoreInfo() {
   var name = $('s-name').value.trim(), emoji = $('s-emoji').value.trim();
   var addr = $('s-addr').value.trim(), city = $('s-city').value.trim();
   var country = $('s-country').value;
+  var whatsapp = $('s-whatsapp') ? $('s-whatsapp').value.trim() : '';
   if(!name) { showToast('Le nom ne peut pas être vide'); return; }
   try {
-    await FM.updateStore(me.storeId, { name:name, emoji:emoji||'🏪', address:addr, city:city, country:country });
-    if(_myStoreData) { _myStoreData.name=name; _myStoreData.emoji=emoji; _myStoreData.addr=addr; _myStoreData.city=city; _myStoreData.country=country; }
-    // Mettre à jour l'affichage du nom dans la sidebar
+    var updateData = { name:name, emoji:emoji||'🏪', address:addr, city:city, country:country };
+    if(whatsapp) updateData.whatsapp_phone = whatsapp;
+    await FM.updateStore(me.storeId, updateData);
+    if(_myStoreData) {
+      _myStoreData.name=name; _myStoreData.emoji=emoji; _myStoreData.addr=addr;
+      _myStoreData.city=city; _myStoreData.country=country;
+      if(whatsapp) _myStoreData.whatsappPhone=whatsapp;
+    }
     $('sb-sn').innerHTML = name.replace(/(\S+)$/, '<span>$1</span>');
     $('sb-ur').textContent = name;
     showToast('Boutique mise à jour ✓');
     renderSettings();
   } catch(err) { showToast('Erreur: '+err.message); }
+}
+
+// ─── LOCALISATION VENDEUR ───
+function startVendorLocation() {
+  if (!window.FMLocation) return;
+  var mapEl = document.getElementById('vendor-map');
+  var btnRefresh = document.getElementById('btn-refresh-map');
+  if (mapEl) mapEl.style.display = 'block';
+  if (btnRefresh) btnRefresh.style.display = 'inline-flex';
+  FMLocation.showMap('vendor-map', { zoom: 16 });
+  FMLocation.syncNow();
+  showToast('📍 Position boutique enregistrée');
+}
+function refreshVendorMap() {
+  if (window.FMLocation) { FMLocation.showMap('vendor-map', { zoom: 16 }); }
 }
 
 // ─── PREMIUM ───
@@ -1353,12 +1192,14 @@ function showNotif(o){notifOId=o.id;$('on-b').innerHTML='<strong>'+(o.customer?o
 
 // ─── PDF ───
 function dlReport(){
-  var store=myStore(),orders=GO(),prods=GP(),now=new Date(),rev=orders.reduce(function(s,o){return s+o.total;},0);
-  var jspdf=window.jspdf,doc=new jspdf.jsPDF(),G=[27,99,50],W=[255,255,255],BG=[247,249,247];
-  doc.setFillColor.apply(doc,G);doc.rect(0,0,210,38,'F');doc.setTextColor.apply(doc,W);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(store?store.name:'FreshMart',14,16);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(200,230,210);doc.text('Rapport — '+now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}),14,26);
-  var y=50;doc.setTextColor(20,100,60);doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text('Résumé',14,y);y+=8;
-  [["CA",rev.toLocaleString('fr-FR')+' FCFA'],['Commandes',orders.length],['Produits',prods.length],['Ruptures',prods.filter(function(p){return p.stock===0;}).length]].forEach(function(x,i){doc.setFillColor.apply(doc,i%2===0?BG:W);doc.rect(14,y-4,182,9,'F');doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(80);doc.text(x[0],18,y+3);doc.setFont('helvetica','bold');doc.setTextColor(20);doc.text(String(x[1]),190,y+3,{align:'right'});y+=11;});
-  doc.save('rapport-freshmart-'+(now.getMonth()+1)+'-'+now.getFullYear()+'.pdf');showToast('Rapport téléchargé');
+  if (!window.FMInvoice) { showToast('Module facture non charge'); return; }
+  var store = myStore();
+  FMInvoice.generateReport(
+    store ? [store] : [],
+    GO(),
+    GU()
+  );
+  showToast('Rapport telecharge');
 }
 
 // ─── EVENTS (toujours addEventListener, jamais onclick dans les balises) ───
@@ -1383,7 +1224,7 @@ window.addEventListener('load', async function() {
   $('ham').addEventListener('click', openSB);
   $('sbov').addEventListener('click', closeSB);
   $('sb-x').addEventListener('click', closeSB);
-  $('btn-logout').addEventListener('click', function(){ me=null; sessionStorage.removeItem('fm_me'); location.reload(); });
+  $('btn-logout').addEventListener('click', function(){ me=null; if(window.FMLocation) FMLocation.stop(); sessionStorage.removeItem('fm_me'); location.reload(); });
   $('btn-scanner').addEventListener('click', openScanner);
   $('btn-pdf').addEventListener('click', dlReport);
   $('btn-pdf2').addEventListener('click', dlReport);

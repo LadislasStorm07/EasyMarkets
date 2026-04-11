@@ -6,8 +6,10 @@
 <title>FreshMart — Super Admin</title>
 <script src="api.js"></script>
 <script src="theme.js"></script>
+<script src="location.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="invoice.js"></script>
 <style>
 :root{--bg:#0C0F0A;--bg2:#111510;--bg3:#181C16;--surf:#1E2420;--surf2:#262D25;--ln:rgba(255,255,255,.07);--ln2:rgba(255,255,255,.12);--gr:#52D68A;--gd:#2D7A4F;--gf:rgba(82,214,138,.08);--red:#FF6B6B;--rf:rgba(255,107,107,.1);--or:#F5A623;--of:rgba(245,166,35,.1);--bl:#5B9BF5;--bf:rgba(91,155,245,.1);--pu:#A78BFA;--pf:rgba(167,139,250,.1);--tx:#E8F0E9;--tx2:#8A9E8C;--tx3:#4A5E4C;--r:10px;--rs:6px;--sb:230px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -116,8 +118,41 @@ tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)
 .s-inp{padding:7px 12px;background:var(--surf);border:1px solid var(--ln2);border-radius:var(--rs);color:var(--tx);font-family:'Outfit',sans-serif;font-size:12px;outline:none}.s-inp:focus{border-color:var(--gd)}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surf);border:1px solid var(--ln2);color:var(--tx);padding:10px 18px;border-radius:30px;font-size:12px;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}.toast.show{transform:translateY(0);opacity:1}
 /* RESPONSIVE */
-@media(max-width:900px){.ham{display:flex}.sb{transform:translateX(-100%)}.sb.open{transform:translateX(0)}.sb-x{display:block}.main{margin-left:0}.topbar{padding-left:60px}.kpis{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.fld-row{grid-template-columns:1fr}}
-@media(max-width:540px){.kpis{grid-template-columns:1fr 1fr}.sec{padding:1rem}.sg{grid-template-columns:1fr}}
+/* ── Responsive complet ── */
+@media(max-width:900px){
+  .ham{display:flex}
+  .sb{transform:translateX(-100%)}
+  .sb.open{transform:translateX(0)}
+  .sb-x{display:block}
+  .main{margin-left:0}
+  .topbar{padding-left:60px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .two-col{grid-template-columns:1fr}
+  .fld-row{grid-template-columns:1fr}
+  .sg{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+}
+@media(max-width:640px){
+  .sec{padding:1rem .875rem}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{padding:.875rem}
+  .kpi-v{font-size:1.5rem}
+  .topbar{padding:0 .875rem 0 60px}
+  table{font-size:11px}
+  th,td{padding:7px 5px}
+  .tbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .ov{padding:.5rem}
+  .mbox{border-radius:16px 16px 0 0;max-height:96vh;margin-top:auto;width:100%;max-width:100%}
+  .ov.open{align-items:flex-end}
+  .sc{padding:1rem}
+  .ann{padding:.875rem 1rem}
+  .feed-item{gap:.75rem}
+}
+@media(max-width:420px){
+  .kpis{grid-template-columns:1fr}
+  .sg{grid-template-columns:1fr}
+  .sec{padding:.875rem .75rem}
+  .act-b{padding:5px 9px;font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -148,6 +183,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)
       <button class="si" onclick="goSec('orders',this)"><span class="ic">◱</span>Commandes</button>
       <button class="si" onclick="goSec('announcements',this)"><span class="ic">📢</span>Annonces</button>
       <button class="si" onclick="goSec('premium',this)"><span class="ic">✦</span>Premium</button>
+      <button class="si" onclick="goSec('map',this)"><span class="ic">📍</span>Carte en direct</button>
       <div class="sb-sep"></div>
       <button class="si" onclick="goSec('activity',this)"><span class="ic">◷</span>Activité</button>
       <button class="si" onclick="dlPDF()"><span class="ic">⬡</span>Rapport PDF</button>
@@ -235,6 +271,32 @@ tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)
     <div class="sec" id="sec-activity">
       <div class="card"><div class="card-h"><span class="card-t">Journal d'activité</span><button class="act-b" onclick="clearAct()">Effacer</button></div><div id="af"></div></div>
     </div>
+
+    <!-- CARTE EN DIRECT -->
+    <div class="sec" id="sec-map">
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;margin-bottom:.5rem">📍 Carte en direct</h2>
+      <p style="font-size:12px;color:var(--tx2);font-weight:300;margin-bottom:1.25rem">Position en temps réel de toutes les boutiques, vendeurs et clients actifs.</p>
+
+      <!-- Légende + Stats -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--gf);border:1px solid var(--gp);border-radius:20px;font-size:11px;font-weight:500;color:var(--gr)">
+          <div style="width:8px;height:8px;border-radius:50%;background:#40916C"></div> Boutiques
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surf);border:1px solid var(--ln);border-radius:20px;font-size:11px;font-weight:500;color:var(--tx2)">
+          <div style="width:8px;height:8px;border-radius:50%;background:#2D6A4F"></div> Vendeurs actifs
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surf);border:1px solid var(--ln);border-radius:20px;font-size:11px;font-weight:500;color:var(--tx2)">
+          <div style="width:8px;height:8px;border-radius:50%;background:#1B4332"></div> Clients
+        </div>
+        <button class="act-b" onclick="refreshAdminMap()" style="margin-left:auto">🔄 Actualiser</button>
+      </div>
+
+      <!-- Carte Leaflet -->
+      <div id="admin-map" class="fm-map fm-map-lg" style="border-radius:var(--r)"></div>
+
+      <!-- Stats sous la carte -->
+      <div id="map-stats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:1rem"></div>
+    </div>
   </div>
 </div>
 
@@ -261,7 +323,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:rgba(255,255,255,.02)
       </div>
       <div class="fld-row"><div class="fld"><label>Prénom *</label><input type="text" id="c-fn" placeholder="Jean"></div><div class="fld"><label>Nom *</label><input type="text" id="c-ln" placeholder="Dupont"></div></div>
       <div class="fld"><label>Email (connexion admin) *</label><input type="email" id="c-email" placeholder="admin@boutique.com"></div>
-      <div class="fld-row"><div class="fld"><label>Téléphone</label><input type="tel" id="c-tel" placeholder="+229 00 00 00 00"></div><div class="fld"><label>Mot de passe *</label><input type="password" id="c-pw" placeholder="min. 6 caractères"></div></div>
+      <div class="fld-row"><div class="fld"><label>📲 Numéro WhatsApp</label><input type="tel" id="c-tel" placeholder="+229 00 00 00 00"></div><div class="fld"><label>Mot de passe *</label><input type="password" id="c-pw" placeholder="min. 6 caractères"></div></div>
       <div class="fld-row"><div class="fld"><label>Ville *</label><input type="text" id="c-city" placeholder="Cotonou"></div><div class="fld"><label>Pays</label><select id="c-ctr"><option>Bénin</option><option>Togo</option><option>Nigeria</option><option>Ghana</option><option>Côte d'Ivoire</option><option>Sénégal</option><option>France</option></select></div></div>
       <div class="fld"><label>Adresse</label><input type="text" id="c-addr" placeholder="Quartier, rue..."></div>
     </div>
@@ -344,6 +406,38 @@ function goSec(id,btn){
   if(btn)btn.classList.add('active')
   $('tb-t').textContent=btn?btn.textContent.trim():id
   closeSB()
+  // Charger la carte au premier affichage
+  if(id==='map') initAdminMap()
+}
+
+// ═══ CARTE EN DIRECT ═══
+var _mapInitialized = false
+function initAdminMap(){
+  if(!window.FMLocation) return
+  if(!_mapInitialized){
+    _mapInitialized = true
+    FMLocation.showAdminMap('admin-map')
+    renderMapStats()
+  }
+}
+function refreshAdminMap(){
+  _mapInitialized = false
+  initAdminMap()
+  renderMapStats()
+}
+async function renderMapStats(){
+  const el=$('map-stats'); if(!el)return
+  const stores=GS(), orders=GO(), users=GU()
+  const withLoc = stores.filter(s=>s.latitude)
+  el.innerHTML=[
+    ['🏪 Boutiques total', stores.length],
+    ['📍 Boutiques localisées', withLoc.length],
+    ['👥 Clients total', users.length],
+    ['📦 Commandes total', orders.length],
+  ].map(([l,v])=>`<div style="background:var(--surf);border:1px solid var(--ln);border-radius:var(--rs);padding:.875rem">
+    <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">${l}</div>
+    <div style="font-size:1.4rem;font-weight:600;color:var(--gr)">${v}</div>
+  </div>`).join('')
 }
 
 // OVERVIEW
@@ -432,7 +526,7 @@ async function createStore(){
   if(_admins.find(a=>a.email===email)){$('cme').style.display='block';$('cme').textContent='Email déjà utilisé';return}
   try{
     const sid='store_'+Date.now()
-    await FM.createStore({id:sid,name:nm,emoji:$('c-em').value||'🏪',ownerName:fn+' '+ln,ownerEmail:email,ownerPhone:$('c-tel').value.trim(),city,country:$('c-ctr').value,addr:$('c-addr').value.trim(),storeType})
+    await FM.createStore({id:sid,name:nm,emoji:$('c-em').value||'🏪',ownerName:fn+' '+ln,ownerEmail:email,ownerPhone:$('c-tel').value.trim(),whatsappPhone:$('c-tel').value.trim(),city,country:$('c-ctr').value,addr:$('c-addr').value.trim(),storeType})
     await FM.createAdmin({fn,ln,email,password:pw,phone:$('c-tel').value.trim(),storeId:sid,storeName:nm})
     addAct(`Boutique créée : ${nm}`,'success')
     ;['c-nm','c-fn','c-ln','c-email','c-pw','c-city','c-addr','c-tel'].forEach(i=>$(i).value='');$('c-em').value='🏪'
@@ -506,12 +600,10 @@ function clearAct(){if(confirm('Vider le journal ?'))toast('Journal non effaçab
 
 // PDF
 function dlPDF(){
-  const {jsPDF}=window.jspdf,doc=new jsPDF(),stores=GS(),orders=GO(),users=GU(),now=new Date()
-  const rev=orders.reduce((s,o)=>s+o.total,0)
-  doc.setFillColor(12,15,10);doc.rect(0,0,210,36,'F');doc.setTextColor(82,214,138);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('FreshMart — Super Admin',14,16)
-  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(170,210,180);doc.text('Rapport — '+now.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}),14,26)
-  let y=50;doc.setTextColor(20,100,60);doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text('Résumé',14,y);y+=8
-  [[`Boutiques`,stores.length],['Clients',users.length],['Commandes',orders.length],['CA total',rev.toLocaleString('fr-FR')+' FCFA']].forEach(([l,v],i)=>{doc.setFillColor(i%2===0?245:255,i%2===0?248:255,i%2===0?245:255);doc.rect(14,y-4,182,9,'F');doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(80);doc.text(l,18,y+3);doc.setFont('helvetica','bold');doc.setTextColor(20);doc.text(String(v),190,y+3,{align:'right'});y+=11})
-  y+=6;doc.setTextColor(20,100,60);doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text('Boutiques',14,y);y+=8
-  stores.forEach((s,i)=>{if(y>265){doc.addPage();y=20}const so=orders.filter(o=>o.storeId===s.id||(s.id==='store_1'&&!o.storeId)),rv=so.reduce((sum,o)=>sum+o.total,0);doc.setFillColor(i%2===0?245:255,i%2===0?248:255,i%2===0?245:255);doc.rect(14,y-4,182,9,'F');doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(60);doc.text(s.name.slice(0,25),18,y+2);doc.text(s.ownerName,70,y+2);doc.text(s.city,120,y+2);doc.setFont('helvetica','bold');doc.setTextColor(20,100,60);doc.text(rv.toLocaleString('fr-FR')+' FCFA',190,y+2,{align:'right'});y+=10})
-  const pc=doc.internal.getNumberOfPages();for(let i=1;i<=pc;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(150);doc.text(`FreshMart Su
+  if (!window.FMInvoice) { toast('Module facture non charge'); return; }
+  FMInvoice.generateReport(GS(), GO(), GU());
+  toast('Rapport telecharge');
+}
+</script>
+</body>
+</html>

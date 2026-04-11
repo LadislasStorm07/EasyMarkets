@@ -6,8 +6,11 @@
 <title>FreshMart — Épicerie en ligne</title>
 <script src="api.js"></script>
 <script src="theme.js"></script>
+<script src="realtime.js"></script>
+<script src="location.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="invoice.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
@@ -113,7 +116,7 @@ nav{background:var(--wh);border-bottom:1px solid var(--ln);position:sticky;top:0
 
 /* PRODUCTS GRID */
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;background:var(--ln);border:1px solid var(--ln);border-radius:var(--r);overflow:hidden}
-.pcard{background:var(--wh);padding:1.25rem;cursor:pointer;transition:background .15s;display:flex;flex-direction:column}
+.pcard{background:var(--wh);padding:1.25rem;cursor:pointer;transition:background .15s;display:flex;flex-direction:column;position:relative;overflow:hidden}
 .pcard:hover{background:var(--gf)}
 .pc-em{font-size:2.2rem;margin-bottom:.75rem}
 .pc-cat{font-size:10px;font-weight:600;color:var(--gl);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
@@ -127,6 +130,25 @@ nav{background:var(--wh);border-bottom:1px solid var(--ln);position:sticky;top:0
 .st-ok{background:#EBFAF2;color:#1B7A4F}
 .st-lo{background:var(--ob);color:var(--or)}
 .st-out{background:var(--rb);color:var(--red)}
+/* ── Realtime counters ── */
+.fm-stats{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--ln2)}
+.fm-views{font-size:10px;color:var(--ink4);font-weight:500;transition:color .3s}
+.fm-sales{font-size:10px;color:var(--ink4);font-weight:500}
+.fm-views::before{content:'👁 ';font-size:9px}
+.fm-sales::before{content:'🛍 ';font-size:9px}
+/* Trend badge */
+.fm-trend{display:none;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#E65100;background:#FFF3E0;border:1px solid #FFB74D;border-radius:20px;padding:2px 7px;position:absolute;top:8px;right:8px;animation:fm-pulse 1.8s ease-in-out infinite}
+.fm-trend-on{display:flex}
+@keyframes fm-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.85;transform:scale(1.04)}}
+/* Hover stats overlay */
+.fm-hover-stats{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(27,67,50,.92) 0%,transparent 100%);padding:.75rem 1rem .5rem;opacity:0;transition:opacity .25s;pointer-events:none;border-radius:0 0 var(--r) var(--r)}
+.pcard:hover .fm-hover-stats{opacity:1}
+.fm-hs-row{display:flex;justify-content:space-between;align-items:center}
+.fm-hs-label{font-size:10px;color:rgba(255,255,255,.7);font-weight:500}
+.fm-hs-val{font-size:12px;color:white;font-weight:700}
+/* Pulse animé quand un compteur monte */
+@keyframes fm-countup{0%{color:var(--gr)}60%{color:var(--gr)}100%{color:var(--ink4)}}
+.fm-views.counting{animation:fm-countup .6s ease-out forwards}
 .add-btn{margin-top:10px;padding:7px;border:1px solid var(--ln);border-radius:var(--rs);background:transparent;color:var(--ink2);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;width:100%}
 .add-btn:hover:not(:disabled){background:var(--gr);border-color:var(--gr);color:white}
 .add-btn:disabled{color:var(--ink4);cursor:not-allowed}
@@ -286,24 +308,45 @@ nav{background:var(--wh);border-bottom:1px solid var(--ln);position:sticky;top:0
 .tbl-w{overflow-x:auto}
 table{min-width:450px}
 
+/* ── Responsive complet ── */
 @media(max-width:900px){
-  .a-left{display:none}.a-right{width:100%;padding:2rem}
-  .cl{grid-template-columns:1fr}.rg{grid-template-columns:1fr}
+  .a-left{display:none}
+  .a-right,.ar{width:100%;padding:2rem}
+  .cl,.rg{grid-template-columns:1fr}
   .fld-row{grid-template-columns:1fr}
   #pg-profile .pbox~div,.pg-profile-grid{grid-template-columns:1fr!important}
+  .sum-box,.del-box{width:100%}
 }
 @media(max-width:640px){
   .n-links{display:none}
   .mob-nav{display:block}
   #app nav .cart-btn span:not(.cpill){display:none}
-  .page{padding:1.25rem 1rem;padding-bottom:80px}
-  .hero{padding:1.5rem}
-  .hero h2{font-size:1.5rem}
-  .vn{max-width:calc(100vw - 1.5rem);right:.75rem}
-  .ss-title{font-size:1.5rem}
+  .page{padding:1rem .75rem;padding-bottom:80px}
+  .hero{padding:1.25rem .875rem}
+  .hero h2{font-size:1.3rem}
+  .vn{max-width:calc(100vw - 1rem);right:.5rem;left:.5rem;top:auto;bottom:5rem}
+  .ss-title{font-size:1.4rem}
   .sg{grid-template-columns:1fr}
-  .pgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
-  .a-right{padding:1.5rem}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
+  .a-right{padding:1.25rem}
+  .modal{border-radius:16px 16px 0 0;max-height:96vh;margin-top:auto}
+  .mo,.odov{align-items:flex-end;padding:0}
+  .crow{flex-wrap:wrap;gap:6px}
+  .ctot{min-width:auto}
+  table{min-width:320px;font-size:12px}
+  th,td{padding:8px 6px!important}
+  .fm-hover-stats{display:none!important}
+  .fm-stats{gap:6px}
+  .pcard{padding:1rem}
+  .pc-em{font-size:1.8rem;margin-bottom:.5rem}
+  .cbox,.sum-box,.del-box{padding:1rem}
+}
+@media(max-width:380px){
+  .pgrid{grid-template-columns:1fr 1fr}
+  .pcard{padding:.75rem}
+  .pc-nm{font-size:13px}
+  .pc-pr{font-size:1rem}
+  .hero h2{font-size:1.2rem}
 }
 </style>
 </head>
@@ -452,10 +495,24 @@ table{min-width:450px}
   <!-- PROFIL -->
   <div class="page" id="pg-profile">
     <h1 class="pg-title" style="margin-bottom:1.5rem">Mon <span>profil</span></h1>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start" class="pg-profile-grid">
       <div class="pbox">
         <div class="pb-top"><div class="pb-av" id="pb-av">?</div><div><div class="pb-nm" id="pb-nm"></div><div class="pb-em" id="pb-em"></div></div></div>
         <div id="pb-rows"></div>
+
+        <!-- LOCALISATION CLIENT -->
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--ln)">
+          <div style="font-size:11px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.75rem">📍 Ma localisation</div>
+          <div id="fm-loc-error" class="fm-loc-error"></div>
+          <div id="client-loc-bar" class="fm-loc-bar" style="display:none">
+            <div class="fm-loc-dot"></div>
+            <div><div style="font-weight:500">Position active</div><div id="client-loc-coords" class="fm-loc-coords"></div></div>
+          </div>
+          <div id="client-map" class="fm-map" style="margin-bottom:.75rem;display:none"></div>
+          <button class="fm-loc-btn" onclick="startClientLocation()">📡 Partager ma position</button>
+          <div style="font-size:10px;color:var(--ink4);margin-top:6px">Votre position aide le vendeur à vous livrer rapidement.</div>
+        </div>
+
         <button style="margin-top:1rem;padding:9px 18px;background:var(--gf);border:1px solid var(--gp);color:var(--gr);border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;font-weight:500" onclick="switchStore()">🏪 Changer de boutique</button>
         <button style="margin-top:.75rem;padding:9px 18px;background:none;border:1px solid var(--red);color:var(--red);border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;display:block" onclick="logout()">Se déconnecter</button>
       </div>
@@ -562,16 +619,30 @@ const SL = (c,t) => `<span class="pill ${c}">${t}</span>`
 async function loadClientData() {
   if (!me) return
   try {
-    const [stores, prods, orders, res] = await Promise.all([
-      FM.getStores(),
+    // Toujours récupérer les stores en premier pour garantir que selStore est valide
+    const stores = await FM.getStores().then(rows => rows.filter(s => s.active !== false).map(FM.adaptStore))
+    _stores = stores
+
+    // Garantir que selStore pointe vers un store valide
+    if (!selStore || !stores.find(s => s.id === selStore.id)) {
+      const savedId = sessionStorage.getItem('fm_selstore')
+      selStore = stores.find(s => s.id === savedId) || stores[0] || null
+    }
+
+    // Charger les produits, commandes et réservations en parallèle
+    const [prods, orders, res] = await Promise.all([
       selStore ? FM.getProducts(selStore.id) : Promise.resolve([]),
       FM.getClientOrders(me.email),
       FM.getClientReservations(me.email)
     ])
-    _stores = stores.filter(s=>s.active!==false).map(FM.adaptStore)
-    _prods  = prods.map(FM.adaptProduct)
+
+    _prods    = prods.map(FM.adaptProduct)
     _myOrders = orders.map(FM.adaptOrder)
-    _myRes  = res
+    _myRes    = res
+
+    // Sauvegarder le selStore en sessionStorage pour les refreshs
+    if (selStore) sessionStorage.setItem('fm_selstore', selStore.id)
+
   } catch(err) { console.error('loadClientData:', err) }
 }
 
@@ -606,7 +677,11 @@ async function doRegister() {
     showStoreSelect()
   } catch(err) { showErr('Erreur : ' + (err.message.includes('unique')? 'Email déjà utilisé' : err.message)) }
 }
-function logout() { me=null; selStore=null; sessionStorage.removeItem('fm_client_me'); sessionStorage.removeItem('fm_selstore'); location.reload() }
+function logout() { 
+  if (window.FMRealtime) FMRealtime.destroy()
+  if (window.FMLocation) FMLocation.stop()
+  me=null; selStore=null; sessionStorage.removeItem('fm_client_me'); sessionStorage.removeItem('fm_selstore'); location.reload() 
+}
 function switchStore() { $('app').style.display='none'; showStoreSelect() }
 
 // ═══ STORE SELECT ═══
@@ -616,7 +691,17 @@ async function showStoreSelect() {
   const stores = await FM.getStores().then(rows=>rows.filter(s=>s.active!==false).map(FM.adaptStore)).catch(()=>[])
   _stores = stores
   const saved = sessionStorage.getItem('fm_selstore')
-  selStore=stores.find(s=>s.id===saved)||stores[0]||null
+  selStore = stores.find(s=>s.id===saved) || stores[0] || null
+
+  // Si une seule boutique disponible, passer directement sans afficher le sélecteur
+  if (stores.length === 1) {
+    selStore = stores[0]
+    sessionStorage.setItem('fm_selstore', selStore.id)
+    $('store-sel').style.display='none'
+    await bootApp()
+    return
+  }
+
   $('sg').innerHTML=stores.length ? stores.map(s=>`
     <div class="so ${s.id===(selStore?.id)?'sel':''}" onclick="pickStore('${s.id}',this)">
       <div class="so-chk">✓</div>
@@ -630,6 +715,8 @@ function pickStore(id, el) {
   selStore=_stores.find(s=>s.id===id)||null
 }
 async function confirmStore() {
+  // Auto-sélectionner le premier store si aucun n'est sélectionné
+  if(!selStore && _stores.length) selStore = _stores[0]
   if(!selStore) return
   sessionStorage.setItem('fm_selstore', selStore.id)
   $('store-sel').style.display='none'
@@ -640,6 +727,37 @@ async function confirmStore() {
 async function bootApp() {
   $('auth').style.display='none'; $('store-sel').style.display='none'; $('app').style.display='block'
   await loadClientData()
+
+  // ── Démarrer le moteur temps réel ──
+  if (window.FMRealtime) {
+    FMRealtime.init(selStore?.id, {
+      onProductAdded: function(p) {
+        // Vérifier que le produit appartient bien à ce store
+        if (p.storeId && selStore && p.storeId !== selStore.id) return
+        if (!_prods.find(function(x){ return String(x.id)===String(p.id); })) {
+          _prods.push(p)
+          // Re-render si on est sur la page catalogue
+          var catPage = document.getElementById('pg-catalogue')
+          if (catPage && catPage.classList.contains('active')) renderCat()
+          showToast('🆕 Nouveau produit disponible : ' + p.name)
+        }
+      },
+      onProductUpdated: function(p) {
+        var idx = _prods.findIndex(function(x){ return String(x.id)===String(p.id); })
+        if (idx >= 0) {
+          _prods[idx] = Object.assign({}, _prods[idx], p)
+          var catPage = document.getElementById('pg-catalogue')
+          if (catPage && catPage.classList.contains('active')) renderCat()
+        }
+      },
+      onProductDeleted: function(id) {
+        _prods = _prods.filter(function(x){ return String(x.id)!==String(id); })
+        var catPage = document.getElementById('pg-catalogue')
+        if (catPage && catPage.classList.contains('active')) renderCat()
+      }
+    }, _prods)
+  }
+
   $('n-store').textContent=(selStore?.emoji||'🏪')+' '+(selStore?.name||'')
   $('hero-store').textContent=(selStore?.emoji||'')+' '+(selStore?.name||'')
   $('udot').textContent=(me.fn[0]+me.ln[0]).toUpperCase()
@@ -650,23 +768,52 @@ async function bootApp() {
   renderAnnBanners()
   $('res-d').min=new Date().toISOString().split('T')[0]
   $('res-d').value=new Date().toISOString().split('T')[0]
+  // ── Localisation ──
+  if (window.FMLocation) {
+    FMLocation.init('client', me.id)
+    FMLocation.onChange(function(coords) {
+      const bar = $('client-loc-bar')
+      const coordEl = $('client-loc-coords')
+      if (bar) bar.style.display = 'flex'
+      if (coordEl) coordEl.textContent = coords.lat.toFixed(5) + ', ' + coords.lng.toFixed(5) + ' (±' + coords.accuracy + 'm)'
+    })
+  }
   startNotifPolling()
 }
 window.addEventListener('load', async ()=>{
   const saved=sessionStorage.getItem('fm_client_me')
   if(saved){
-    me=JSON.parse(saved)
-    const sid=sessionStorage.getItem('fm_selstore')
-    const stores = await FM.getStores().then(rows=>rows.filter(s=>s.active!==false).map(FM.adaptStore)).catch(()=>[])
-    _stores = stores
-    if(sid){ selStore=stores.find(s=>s.id===sid)||stores[0]; if(selStore) await bootApp(); else showStoreSelect() }
-    else showStoreSelect()
+    try {
+      me=JSON.parse(saved)
+      // Charger les stores
+      const stores = await FM.getStores().then(rows=>rows.filter(s=>s.active!==false).map(FM.adaptStore)).catch(()=>[])
+      _stores = stores
+
+      // Trouver le store sauvegardé ou prendre le premier
+      const sid=sessionStorage.getItem('fm_selstore')
+      selStore = stores.find(s=>s.id===sid) || stores[0] || null
+
+      if(selStore){
+        // Store trouvé → aller directement au dashboard
+        sessionStorage.setItem('fm_selstore', selStore.id)
+        await bootApp()
+      } else if(stores.length) {
+        // Stores existent mais aucun sélectionné → montrer le sélecteur
+        showStoreSelect()
+      } else {
+        // Aucun store → re-afficher auth
+        $('auth').style.display='flex'
+      }
+    } catch(e) {
+      console.error('Session restore error:', e)
+      sessionStorage.removeItem('fm_client_me')
+      $('auth').style.display='flex'
+    }
   }
   // Carousel boutons
   const prev=$('car-prev'), next=$('car-next')
   if(prev) prev.addEventListener('click',()=>{ goSlide(carIdx-1); startCarTimer(); })
   if(next) next.addEventListener('click',()=>{ goSlide(carIdx+1); startCarTimer(); })
-  // Pause au survol
   const cw=$('carousel-wrap')
   if(cw){ cw.addEventListener('mouseenter',stopCarTimer); cw.addEventListener('mouseleave',startCarTimer); }
 })
@@ -750,6 +897,8 @@ function renderCat() {
   if(activeCat!=='all') f=f.filter(p=>p.category===activeCat)
   $('pgrid').innerHTML=f.length?f.map(p=>{
     const sc=p.stock===0?'st-out':p.stock<10?'st-lo':'st-ok', st=p.stock===0?'Rupture':p.stock<10?p.stock+' restants':'En stock'
+    const views = window.FMRealtime ? FMRealtime.getViews(p.id) : (p.views||0)
+    const sales = window.FMRealtime ? FMRealtime.getSales(p.id) : (p.salesCount||0)
     const priceHtml = p.promo
       ? `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
            <span style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;color:var(--or)">${p.promo.toLocaleString('fr-FR')} <small style="font-family:Outfit,sans-serif;font-size:10px;font-weight:300">FCFA</small></span>
@@ -757,15 +906,42 @@ function renderCat() {
            <span style="background:#FFF3E0;color:#E65100;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.3px">-${Math.round((1-p.promo/p.price)*100)}%</span>
          </div>`
       : `<div class="pc-pr">${p.price.toLocaleString('fr-FR')} <small>FCFA</small></div>`
-    return`<div class="pcard" onclick="openProd(${p.id})">
+    return`<div class="pcard" data-pid="${p.id}" onclick="openProd(${p.id})">
+      <div class="fm-trend">🔥 Tendance</div>
       <div class="pc-em">${p.emoji}</div>
       <div class="pc-cat">${p.category}</div>
       <div class="pc-nm">${p.name}${p.new?'<span class="new-tag">NOUVEAU</span>':''}</div>
       <div class="pc-desc">${p.desc}</div>
       <div class="pc-ft">${priceHtml}<span class="stag ${sc}">${st}</span></div>
+      <div class="fm-stats">
+        <span class="fm-views">${FMRealtime.fmt(views)} vues</span>
+        <span class="fm-sales">${FMRealtime.fmt(sales)} ventes</span>
+      </div>
       <button class="add-btn" ${p.stock===0?'disabled':''} onclick="event.stopPropagation();qadd(${p.id})">${p.stock===0?'Indisponible':'+ Panier'}</button>
+      <div class="fm-hover-stats">
+        <div class="fm-hs-row">
+          <span class="fm-hs-label">👁 Vues totales</span>
+          <span class="fm-hs-val">${FMRealtime.fmt(views)}</span>
+        </div>
+        <div class="fm-hs-row" style="margin-top:3px">
+          <span class="fm-hs-label">🛍 Fois commandé</span>
+          <span class="fm-hs-val">${FMRealtime.fmt(sales)}</span>
+        </div>
+      </div>
     </div>`
   }).join('') : '<div style="padding:4rem;text-align:center;color:var(--ink3);grid-column:1/-1">Aucun produit trouvé</div>'
+
+  // Animer les nouvelles cartes après rendu
+  if (window.FMRealtime) {
+    requestAnimationFrame(function() {
+      document.querySelectorAll('#pgrid .pcard').forEach(function(card) {
+        if (!card.dataset.appeared) {
+          card.dataset.appeared = '1'
+          FMRealtime.animateCardAppear(card)
+        }
+      })
+    })
+  }
 }
 function setCat(c, btn) { activeCat=c; document.querySelectorAll('.cc').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderCat() }
 function qadd(id) {
@@ -871,8 +1047,54 @@ async function placeOrder(){
       delType, note
     })
     _myOrders.unshift(FM.adaptOrder(order))
-    setCart([]); showToast('Commande passée !'); goPage('orders',null)
+    // ── Tracker les ventes dans FMRealtime ──
+    if (window.FMRealtime) {
+      cart.forEach(function(item) { FMRealtime.trackSale(item.id, item.qty) })
+    }
+    setCart([])
+    // ── Notification WhatsApp vendeur ──
+    sendWhatsAppToVendor(FM.adaptOrder(order))
+    showToast('Commande passée !')
+    goPage('orders',null)
   } catch(err) { showToast('Erreur commande: '+err.message) }
+}
+
+function sendWhatsAppToVendor(order) {
+  try {
+    const phone = selStore?.whatsappPhone || selStore?.ownerPhone
+    if(!phone) return  // Pas de numéro configuré, on passe silencieusement
+    // Formater le numéro : retirer espaces, tirets, et ajouter le code pays si absent
+    const raw = phone.replace(/[\s\-().]/g,'')
+    const num = raw.startsWith('+') ? raw.slice(1) : raw  // WhatsApp n'accepte pas le +
+
+    // Construire le message
+    const storeName = selStore?.name || 'FreshMart'
+    const delLabel = order.delType==='delivery' ? '🚚 Livraison à domicile' : '🏪 Retrait en boutique'
+    const itemsList = (order.items||[]).map(i=>`  • ${i.emoji||''} ${i.name} ×${i.qty} — ${(i.price*i.qty).toLocaleString('fr-FR')} FCFA`).join('\n')
+    const lines = [
+      `🛒 *Nouvelle commande — ${storeName}*`,
+      ``,
+      `📋 *N° :* ${order.id}`,
+      `👤 *Client :* ${order.customer?.name||'—'}`,
+      `📞 *Tél :* ${order.customer?.phone||'—'}`,
+      ``,
+      `*Articles :*`,
+      itemsList,
+      ``,
+      `💰 *Total :* ${order.total.toLocaleString('fr-FR')} FCFA`,
+      `📦 *Mode :* ${delLabel}`,
+      order.addr ? `📍 *Adresse :* ${order.addr}` : '',
+      order.note ? `📝 *Note :* ${order.note}` : '',
+      ``,
+      `_Répondez sur FreshMart pour confirmer._`
+    ].filter(l=>l!==undefined).join('\n')
+
+    const url = `https://wa.me/${num}?text=${encodeURIComponent(lines)}`
+    // Ouvrir dans un nouvel onglet (le vendeur voit le message pré-rempli)
+    window.open(url, '_blank', 'noopener,noreferrer')
+  } catch(e) {
+    console.warn('WhatsApp notification failed:', e)
+  }
 }
 
 // ═══ ORDERS ═══
@@ -935,143 +1157,10 @@ function renderInvoices() {
 }
 function dlInvoice(oid) {
   const o = getMyOrders().find(x=>x.id===oid); if(!o) return
+  if (!window.FMInvoice) { showToast('Module facture non charge'); return; }
   const store = GS().find(s=>s.id===o.storeId) || GS()[0]
-  const {jsPDF} = window.jspdf
-  const doc = new jsPDF({unit:'mm',format:'a4'})
-  const PW=210, PH=297
-
-  // Palette
-  const G=[27,99,50], G2=[45,106,79], GL=[216,243,220], W=[255,255,255]
-  const INK=[17,22,18], INK2=[61,73,64], INK3=[122,140,128]
-  const LN=[227,234,229], BG=[247,249,247], OR=[180,83,9]
-
-  const setC = c => doc.setTextColor(c[0],c[1],c[2])
-  const setF = c => doc.setFillColor(c[0],c[1],c[2])
-  const setDC= c => doc.setDrawColor(c[0],c[1],c[2])
-  const rect  = (x,y,w,h) => doc.rect(x,y,w,h,'F')
-  const txt   = (t,x,y,o) => doc.text(String(t),x,y,o||{})
-
-  const sn = store?.name||'FreshMart'
-  const sc = store ? `${store.city||''}, ${store.country||''}` : ''
-  const sa = store?.addr||''
-  const sp = store?.ownerPhone||''
-  const se = store?.ownerEmail||''
-  const invNum  = 'FM-'+o.id.slice(-8).toUpperCase()
-  const invDate = new Date(o.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})
-  const dueDate = new Date(new Date(o.createdAt).getTime()+30*864e5).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})
-  const statusLabel = {pending:'En attente',confirmed:'Confirmée',delivered:'Livrée'}[o.status]||o.status
-  const statusColor = o.status==='delivered'?[30,64,175]:o.status==='confirmed'?G:OR
-
-  // ── ZONE 1 : EN-TÊTE ──
-  setF(G); rect(0,0,PW,55)
-  setF(G2); doc.triangle(PW-55,55,PW,55,PW,0,'F')
-
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(22); txt(sn,16,22)
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); setC(GL)
-  if(sc) txt(sc,16,30)
-  if(sa) txt(sa,16,36)
-  if(sp) txt(sp,16,42)
-  if(se) txt(se,16,48)
-
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(28); txt('FACTURE',PW-16,24,{align:'right'})
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); setC(GL)
-  txt(invNum,PW-16,33,{align:'right'})
-  txt(invDate,PW-16,40,{align:'right'})
-
-  // ── ZONE 2 : BANDE INFO ──
-  setF(BG); rect(0,55,PW,35)
-
-  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('FACTURER À',16,66)
-  setC(INK);  doc.setFont('helvetica','bold'); doc.setFontSize(11)
-  txt(o.customer?.name||me.fn+' '+me.ln, 16,74)
-  setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5)
-  txt(me.phone||'', 16,81)
-  if(me.addr) txt(me.addr, 16,88)
-
-  setF(LN); rect(105,58,0.4,28)
-
-  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('STATUT',112,66)
-  setF(statusColor); doc.roundedRect(112,68,28,7,2,2,'F')
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(8.5)
-  txt(statusLabel.toUpperCase(),126,73.5,{align:'center'})
-
-  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('ÉCHÉANCE',150,66)
-  setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); txt(dueDate,150,73)
-
-  setC(INK3); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('LIVRAISON',150,81)
-  setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5)
-  txt(o.delType==='delivery'?'À domicile':'Retrait boutique', 150,88)
-
-  // ── ZONE 3 : TABLEAU ARTICLES ──
-  let y = 103
-  setF(G); rect(14,y-5,182,9)
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(8)
-  const cols=[16,90,120,148,175]
-  const headers=['DESCRIPTION','QTÉ','PRIX UNIT.','REMISE','TOTAL']
-  headers.forEach((h,i) => txt(h,cols[i],y+1))
-  y += 9
-
-  ;(o.items||[]).forEach((it,i) => {
-    if(y>240){ doc.addPage(); setF(G); rect(14,15,182,9); setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(8); headers.forEach((h,j)=>txt(h,cols[j],21)); y=30 }
-    setF(i%2===0?BG:W); rect(14,y-5,182,12)
-    setF(LN); rect(14,y+7,182,0.3)
-    const unit = it.price||0, orig = it.originalPrice||unit, qty = it.qty||1
-    const discount = orig > unit ? (orig-unit)*qty : 0
-    setC(INK); doc.setFont('helvetica','normal'); doc.setFontSize(9)
-    txt((it.emoji||'')+' '+it.name.slice(0,32), cols[0],y+2)
-    doc.setFont('helvetica','bold'); txt(String(qty),cols[1],y+2)
-    doc.setFont('helvetica','normal'); setC(INK2)
-    txt(unit.toLocaleString('fr-FR')+' F', cols[2],y+2)
-    if(discount>0){ setC(OR); txt('-'+discount.toLocaleString('fr-FR')+' F',cols[3],y+2) }
-    else { setC(INK3); txt('—',cols[3],y+2) }
-    setC(INK); doc.setFont('helvetica','bold')
-    txt((unit*qty).toLocaleString('fr-FR')+' F', PW-16,y+2,{align:'right'})
-    y += 13
-  })
-
-  // ── ZONE 4 : TOTAUX ──
-  y += 4
-  setF(LN); rect(14,y,182,0.4); y += 6
-
-  const subtotal = (o.items||[]).reduce((s,it)=>s+(it.originalPrice||it.price)*it.qty, 0)
-  const totalDisc = subtotal - o.total
-  if(totalDisc > 0){
-    setC(INK3); doc.setFont('helvetica','normal'); doc.setFontSize(9.5)
-    txt('Sous-total',120,y); setC(INK2); txt(subtotal.toLocaleString('fr-FR')+' FCFA',PW-16,y,{align:'right'}); y+=8
-    setC(INK3); txt('Remises',120,y); setC(OR); txt('-'+totalDisc.toLocaleString('fr-FR')+' FCFA',PW-16,y,{align:'right'}); y+=8
-  }
-  y += 2
-  setF(G); rect(100,y-6,PW-114,16)
-  setC(GL); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); txt('TOTAL TTC',106,y+2)
-  setC(W); doc.setFont('helvetica','bold'); doc.setFontSize(14)
-  txt(o.total.toLocaleString('fr-FR')+' FCFA', PW-16,y+4,{align:'right'})
-  y += 22
-
-  // Note
-  if(o.note?.trim()){
-    setF([255,251,235]); rect(14,y,182,16)
-    setF(OR); rect(14,y,2,16)
-    setC(OR); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); txt('NOTE',20,y+6)
-    setC(INK2); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); txt(o.note.slice(0,90),20,y+12)
-    y += 22
-  }
-
-  // ── PIED DE PAGE ──
-  const footerY = PH-22
-  setF(G); rect(0,footerY-2,PW,0.6)
-  setF(GL); rect(0,footerY-2,40,0.6)
-  setC(INK3); doc.setFont('helvetica','normal'); doc.setFontSize(7.5)
-  txt('Merci pour votre confiance — '+sn, PW/2,footerY+4,{align:'center'})
-  doc.setFontSize(7)
-  txt(sc+(sp?' · '+sp:''), PW/2,footerY+10,{align:'center'})
-  txt('Facture '+invNum+' · Générée le '+new Date().toLocaleDateString('fr-FR'), PW-16,footerY+10,{align:'right'})
-
-  // Numéros de pages
-  const pc=doc.internal.getNumberOfPages()
-  for(let i=1;i<=pc;i++){ doc.setPage(i); setC(INK3); doc.setFont('helvetica','normal'); doc.setFontSize(7); txt('Page '+i+'/'+pc,16,footerY+10) }
-
-  doc.save(`facture-${invNum}.pdf`)
-  showToast('Facture téléchargée ✓')
+  const invNum = FMInvoice.generate(o, store, me)
+  if (invNum) showToast('Facture ' + invNum + ' telechargee')
 }
 
 // ═══ RESERVATIONS ═══
@@ -1184,11 +1273,37 @@ async function renderStoreReviews() {
 }
 
 // ═══ NOTIF POLLING ═══
+// ═══ LOCALISATION CLIENT ═══
+function startClientLocation() {
+  if (!window.FMLocation) return
+  const mapEl = $('client-map')
+  if (mapEl) mapEl.style.display = 'block'
+  FMLocation.showMap('client-map', { zoom: 15 })
+  FMLocation.syncNow()
+  showToast('📍 Localisation activée')
+}
+
 let lastNotifId=0
 function startNotifPolling() {
   setInterval(checkNotifs, 8000)
   setInterval(syncOrderStatuses, 10000)
   setInterval(renderAnnBanners, 30000)
+  // Refresh produits toutes les 3s (synchronisation temps réel catalogue)
+  setInterval(async function() {
+    if (!me || !selStore) return
+    try {
+      const prods = await FM.getProducts(selStore.id)
+      const prevCount = _prods.length
+      _prods = prods.map(FM.adaptProduct)
+      // Sync FMRealtime avec les valeurs DB fraîches
+      if (window.FMRealtime) {
+        _prods.forEach(function(p) { FMRealtime.syncProduct(p.id, p.views, p.salesCount) })
+      }
+      // Re-render si le catalogue est visible
+      const catPage = document.getElementById('pg-catalogue')
+      if (catPage && catPage.classList.contains('active')) renderCat()
+    } catch(e) {}
+  }, 2000) // ← CHANGER ICI pour ajuster la fréquence du refresh catalogue (en millisecondes)
 }
 async function checkNotifs() {
   if(!me) return

@@ -187,11 +187,25 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
   .rc{width:100%;max-width:370px}
   .pick-logo{font-size:2.5rem}
   .pick-q{font-size:1.6rem}
+  .wstep{padding:.25rem}
+  .fld-row{grid-template-columns:1fr}
+  .stype-grid{gap:5px}
+  .stype-chip{padding:5px 10px;font-size:11px}
+  .em-grid{gap:6px}
+  .eo{font-size:1.1rem;padding:5px}
+  .wacts{flex-direction:column;gap:8px}
+  .wacts .btn{width:100%;text-align:center;justify-content:center}
 }
 @media(max-width:420px){
-  .ar{padding:1.5rem}
-  .ap-title{font-size:1.45rem}
+  .ar{padding:1.25rem}
+  .ap-title{font-size:1.35rem}
   .fld-row{grid-template-columns:1fr}
+  .pick-logo{font-size:2rem}
+  .pick-q{font-size:1.4rem}
+  .pick-hint{font-size:12px}
+  .rc{padding:1.25rem}
+  .rc-feat{font-size:12px}
+  .summ{font-size:13px}
 }
 </style>
 </head>
@@ -334,7 +348,14 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
           <div class="fld"><label>Nom</label><input type="text" id="uv-ln" placeholder="Dupont"></div>
         </div>
         <div class="fld"><label>Email</label><input type="email" id="uv-email" placeholder="vous@email.com"></div>
-        <div class="fld"><label>Téléphone</label><input type="tel" id="uv-tel" placeholder="+229 00 00 00 00"></div>
+        <div class="fld">
+          <label>Numéro WhatsApp 📲 <span style="font-weight:300;text-transform:none;letter-spacing:0">— pour recevoir vos commandes</span></label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px;line-height:1">📲</span>
+            <input type="tel" id="uv-tel" placeholder="+229 00 00 00 00" style="flex:1">
+          </div>
+          <div style="font-size:11px;color:var(--ink3);font-weight:300;margin-top:4px">Chaque nouvelle commande vous sera envoyée automatiquement sur ce numéro.</div>
+        </div>
         <div class="fld"><label>Mot de passe (min. 6)</label><input type="password" id="uv-pass" placeholder="••••••••"></div>
         <button class="btn btn-b" onclick="wNext(1)">Continuer →</button>
       </div>
@@ -765,7 +786,8 @@ function wNext(step){
       `Icône : ${document.getElementById('uv-em').value||'🏪'}<br>`+
       `Ville : ${city}, ${document.getElementById('uv-ctr').value}<br>`+
       `Propriétaire : <strong>${document.getElementById('uv-fn').value} ${document.getElementById('uv-ln').value}</strong><br>`+
-      `Email : ${document.getElementById('uv-email').value}`
+      `Email : ${document.getElementById('uv-email').value}<br>`+
+      `📲 WhatsApp : <strong>${document.getElementById('uv-tel').value||'—'}</strong>`
     wShow(3)
   }
 }
@@ -784,7 +806,7 @@ async function regVendor(){
   const addr=document.getElementById('uv-addr').value.trim()
   try {
     const sid='store_'+Date.now()
-    await FM.createStore({id:sid,name:sn,emoji:em,ownerName:fn+' '+ln,ownerEmail:email,ownerPhone:tel,city,country:ctr,addr,storeType:document.getElementById('uv-type').value||'Épicerie'})
+    await FM.createStore({id:sid,name:sn,emoji:em,ownerName:fn+' '+ln,ownerEmail:email,ownerPhone:tel,whatsappPhone:tel,city,country:ctr,addr,storeType:document.getElementById('uv-type').value||'Épicerie'})
     const adminRow=await FM.createAdmin({fn,ln,email,phone:tel,password:pass,storeId:sid,storeName:sn})
     FM.logActivity(`Nouvelle boutique : ${sn} par ${fn} ${ln}`,'success')
     sessionStorage.setItem('fm_me',JSON.stringify(FM.adaptAdmin(adminRow)))

@@ -93,7 +93,9 @@ var FM = {
       id: d.id || ('store_' + Date.now()), name: d.name, emoji: d.emoji || '🏪',
       owner_name: d.ownerName, owner_email: d.ownerEmail, owner_phone: d.ownerPhone,
       city: d.city, country: d.country || 'Bénin', address: d.addr,
-      store_type: d.storeType || 'Épicerie', active: true
+      store_type: d.storeType || 'Épicerie',
+      whatsapp_phone: d.whatsappPhone || d.ownerPhone || null,
+      active: true
     });
   },
   updateStore: function(id, d) { return SB.update('stores', id, d); },
@@ -145,8 +147,10 @@ var FM = {
       : SB.get('products', null, { order: 'created_at.asc' });
   },
   saveProduct: async function(d, editId) {
+    var storeId = d.storeId || d.store_id;
+    if (!editId && !storeId) throw new Error('store_id requis pour créer un produit');
     var p = {
-      store_id: d.storeId || d.store_id, name: d.name, name_en: d.nameEn,
+      store_id: storeId, name: d.name, name_en: d.nameEn,
       category: d.category, category_en: d.categoryEn,
       price: d.price, promo_price: d.promo || null, stock: d.stock,
       description: d.desc, description_en: d.descEn,
@@ -277,21 +281,30 @@ var FM = {
     return SB.get('activity', null, { order: 'created_at.desc', limit: 200 });
   },
 
+  /* LOCALISATION */
+  updateLocation: function(table, id, lat, lng, accuracy) {
+    return SB.update(table, id, {
+      latitude: lat, longitude: lng,
+      loc_accuracy: accuracy || null,
+      loc_updated_at: new Date().toISOString()
+    });
+  },
+
   /* ADAPTATEURS Supabase → format interne */
   adaptProduct: function(r) {
-    return { id:r.id, name:r.name, nameEn:r.name_en, category:r.category, categoryEn:r.category_en, price:r.price, promo:r.promo_price, stock:r.stock, desc:r.description, descEn:r.description_en, emoji:r.emoji, img:r.image_base64, new:r.is_new, storeId:r.store_id, createdAt:r.created_at };
+    return { id:r.id, name:r.name, nameEn:r.name_en, category:r.category, categoryEn:r.category_en, price:r.price, promo:r.promo_price, stock:r.stock, desc:r.description, descEn:r.description_en, emoji:r.emoji, img:r.image_base64, new:r.is_new, storeId:r.store_id, createdAt:r.created_at, views:r.views||0, salesCount:r.sales_count||0 };
   },
   adaptOrder: function(r) {
     return { id:r.id, storeId:r.store_id, customer:{name:r.client_name,phone:r.client_phone,email:r.client_email}, addr:r.client_addr, items:r.items||[], total:r.total, status:r.status, delType:r.delivery_type, note:r.note, qr:r.qr_code, createdAt:r.created_at };
   },
   adaptClient: function(r) {
-    return { id:r.id, fn:r.first_name, ln:r.last_name, email:r.email, phone:r.phone, addr:r.address, city:r.city, country:r.country, createdAt:r.created_at };
+    return { id:r.id, fn:r.first_name, ln:r.last_name, email:r.email, phone:r.phone, addr:r.address, city:r.city, country:r.country, createdAt:r.created_at, latitude:r.latitude||null, longitude:r.longitude||null, locAccuracy:r.loc_accuracy||null, locUpdatedAt:r.loc_updated_at||null };
   },
   adaptAdmin: function(r) {
-    return { id:r.id, fn:r.first_name, ln:r.last_name, email:r.email, phone:r.phone, storeId:r.store_id, storeName:r.store_name, createdAt:r.created_at };
+    return { id:r.id, fn:r.first_name, ln:r.last_name, email:r.email, phone:r.phone, storeId:r.store_id, storeName:r.store_name, createdAt:r.created_at, latitude:r.latitude||null, longitude:r.longitude||null, locAccuracy:r.loc_accuracy||null };
   },
   adaptStore: function(r) {
-    return { id:r.id, name:r.name, emoji:r.emoji, ownerName:r.owner_name, ownerEmail:r.owner_email, ownerPhone:r.owner_phone, city:r.city, country:r.country, addr:r.address, storeType:r.store_type||'Épicerie', active:r.active, createdAt:r.created_at };
+    return { id:r.id, name:r.name, emoji:r.emoji, ownerName:r.owner_name, ownerEmail:r.owner_email, ownerPhone:r.owner_phone, whatsappPhone:r.whatsapp_phone||r.owner_phone||null, city:r.city, country:r.country, addr:r.address, storeType:r.store_type||'Épicerie', active:r.active, createdAt:r.created_at, latitude:r.latitude||null, longitude:r.longitude||null };
   }
 };
 
