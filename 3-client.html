@@ -55,20 +55,104 @@ body{font-family:'Outfit',sans-serif;background:var(--cr);color:var(--ink);-webk
 .a-err{background:var(--rb);color:var(--red);border:1px solid rgba(192,57,43,.15);border-radius:var(--rs);padding:8px 12px;font-size:12px;margin-bottom:1rem;display:none}
 
 /* ═══ STORE SELECT ═══ */
-#store-sel{min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;padding:2rem;background:var(--cr)}
-.ss-logo{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gr);margin-bottom:1.5rem}
-.ss-logo span{font-style:italic}
-.ss-title{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:400;text-align:center;margin-bottom:.5rem}
-.ss-sub{font-size:13px;color:var(--ink3);font-weight:300;text-align:center;margin-bottom:2rem}
-.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;width:100%;max-width:760px}
-.so{background:var(--wh);border:1.5px solid var(--ln);border-radius:var(--r);padding:1.25rem;cursor:pointer;transition:all .2s;position:relative;text-align:left}
-.so:hover{border-color:var(--gm);background:var(--gf)}
-.so.sel{border-color:var(--gr);background:var(--gf)}
-.so-em{font-size:2.5rem;margin-bottom:.75rem}
-.so-nm{font-size:14px;font-weight:500;margin-bottom:2px}
-.so-ct{font-size:12px;color:var(--ink3);font-weight:300}
-.so-chk{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:var(--gr);color:white;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+#store-sel{min-height:100vh;display:none;flex-direction:column;background:var(--cr)}
+.ss-header{background:var(--gr);padding:1.5rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:50}
+.ss-logo{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:white}
+.ss-logo span{font-style:italic;color:var(--gp)}
+.ss-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:300;color:rgba(255,255,255,.8)}
+
+.ss-body{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:2rem}
+.ss-hero{text-align:center;margin-bottom:2rem}
+.ss-hero h2{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:400;margin-bottom:.375rem}
+.ss-hero p{font-size:13px;color:var(--ink3);font-weight:300}
+
+/* Barre de recherche */
+.ss-search-bar{display:flex;gap:10px;margin-bottom:1.5rem;align-items:center}
+.ss-search-wrap{flex:1;position:relative}
+.ss-search-wrap input{width:100%;padding:11px 16px 11px 40px;border:1.5px solid var(--ln);border-radius:var(--r);font-family:'Outfit',sans-serif;font-size:13px;background:var(--wh);color:var(--ink);outline:none;transition:border-color .2s}
+.ss-search-wrap input:focus{border-color:var(--gm)}
+.ss-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--ink3);font-size:16px;pointer-events:none}
+.ss-count{font-size:12px;color:var(--ink3);white-space:nowrap;font-weight:300}
+
+/* Filtres catégories */
+.ss-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.75rem}
+.ss-cat{padding:6px 14px;border:1.5px solid var(--ln);border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;background:var(--wh);color:var(--ink2);transition:all .18s;white-space:nowrap;font-family:'Outfit',sans-serif}
+.ss-cat:hover{border-color:var(--gm);color:var(--gm)}
+.ss-cat.active{background:var(--gr);border-color:var(--gr);color:white}
+.ss-cat-em{margin-right:5px}
+
+/* Grille boutiques */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;width:100%}
+.so{background:var(--wh);border:1.5px solid var(--ln);border-radius:var(--r);cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.so:hover{border-color:var(--gm);box-shadow:0 4px 16px rgba(27,67,50,.1);transform:translateY(-2px)}
+.so.sel{border-color:var(--gr);box-shadow:0 4px 20px rgba(27,67,50,.15)}
+.so-chk{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:var(--gr);color:white;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;z-index:2}
 .so.sel .so-chk{display:flex}
+
+/* Carte dans la fiche boutique */
+.so-top{padding:1.25rem 1.25rem .875rem}
+.so-type-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:var(--gf);border:1px solid var(--gp);border-radius:12px;font-size:10px;font-weight:600;color:var(--gm);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.75rem}
+.so-em{font-size:2rem;margin-bottom:.5rem}
+.so-nm{font-size:15px;font-weight:600;margin-bottom:3px;color:var(--ink)}
+.so-ct{font-size:12px;color:var(--ink3);font-weight:300;margin-bottom:.875rem}
+.so-addr{font-size:11px;color:var(--ink3);display:flex;align-items:flex-start;gap:5px;line-height:1.4;margin-bottom:.75rem}
+.so-addr-icon{flex-shrink:0;margin-top:1px;color:var(--gm)}
+
+/* Mini carte dans la fiche */
+.so-map-wrap{height:130px;background:var(--gf);border-top:1px solid var(--ln);overflow:hidden;position:relative}
+.so-map-wrap .leaflet-container{height:100%!important}
+.so-map-placeholder{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--ink3);font-size:11px;cursor:pointer}
+.so-map-placeholder .pm-icon{font-size:1.75rem}
+.so-map-btn{position:absolute;bottom:8px;right:8px;padding:4px 10px;background:var(--gr);color:white;border:none;border-radius:6px;font-size:10px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;z-index:5}
+
+/* Footer */
+.so-footer{padding:.875rem 1.25rem;background:var(--gf);border-top:1px solid var(--gp);display:flex;align-items:center;justify-content:space-between}
+.so-open{font-size:11px;font-weight:500;color:var(--gm);display:flex;align-items:center;gap:5px}
+.so-open::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--gm);flex-shrink:0}
+.so-phone{font-size:11px;color:var(--ink3)}
+
+/* Barre fixe du bas */
+.ss-bottom{position:sticky;bottom:0;background:var(--wh);border-top:1px solid var(--ln);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.ss-selected-info{font-size:13px;color:var(--ink2)}
+.ss-selected-info strong{color:var(--gr);font-weight:600}
+.ss-btn{padding:11px 28px;background:var(--gr);color:white;border:none;border-radius:var(--rs);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s;white-space:nowrap}
+.ss-btn:hover{background:var(--gm)}
+.ss-btn:disabled{background:var(--ink3);cursor:not-allowed}
+.ss-empty{text-align:center;padding:4rem 2rem;color:var(--ink3)}
+.ss-empty-icon{font-size:2.5rem;margin-bottom:.75rem}
+.ss-empty p{font-size:13px;font-weight:300}
+
+/* Modal carte plein écran */
+#store-map-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0}
+#store-map-modal.open{display:flex}
+.smm-box{background:var(--wh);border-radius:20px 20px 0 0;width:100%;max-width:680px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+.smm-head{padding:1rem 1.25rem;border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between}
+.smm-title{font-size:14px;font-weight:600}
+.smm-close{width:32px;height:32px;border-radius:50%;background:var(--ln);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.smm-info{padding:.875rem 1.25rem;background:var(--gf);border-bottom:1px solid var(--gp)}
+.smm-info-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);margin-bottom:4px}
+.smm-info-row:last-child{margin-bottom:0}
+#store-map-full{flex:1;min-height:320px}
+
+/* Responsive */
+@media(max-width:900px){
+  .sg{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .ss-body{padding:1.5rem}
+}
+@media(max-width:640px){
+  .ss-header{padding:1rem 1.25rem}
+  .ss-body{padding:1rem}
+  .ss-hero{margin-bottom:1.25rem}
+  .ss-hero h2{font-size:1.6rem}
+  .ss-cats{gap:6px}
+  .ss-cat{padding:5px 11px;font-size:11px}
+  .sg{grid-template-columns:1fr}
+  .ss-bottom{padding:.875rem 1.25rem}
+}
+@media(max-width:380px){
+  .sg{grid-template-columns:1fr}
+  .ss-search-bar{flex-direction:column;align-items:stretch}
+}
 
 /* ═══ APP ═══ */
 #app{display:none;min-height:100vh}
@@ -392,11 +476,57 @@ table{min-width:450px}
 
 <!-- ═══ CHOIX BOUTIQUE ═══ -->
 <div id="store-sel">
-  <div class="ss-logo">Fresh<span>Mart</span></div>
-  <div class="ss-title">Choisissez votre boutique</div>
-  <div class="ss-sub">Sur quelle boutique souhaitez-vous faire vos achats aujourd'hui ?</div>
-  <div class="sg" id="sg"></div>
-  <button class="btn-g" style="margin-top:1.5rem;max-width:220px" onclick="confirmStore()">Continuer →</button>
+  <!-- Header collant -->
+  <div class="ss-header">
+    <div class="ss-logo">Fresh<span>Mart</span></div>
+    <div class="ss-title">Choisissez votre boutique</div>
+  </div>
+
+  <!-- Corps principal -->
+  <div class="ss-body">
+    <div class="ss-hero">
+      <h2>Où souhaitez-vous faire vos achats ?</h2>
+      <p>Sélectionnez une boutique pour voir son catalogue</p>
+    </div>
+
+    <!-- Barre de recherche + compteur -->
+    <div class="ss-search-bar">
+      <div class="ss-search-wrap">
+        <span class="ss-search-icon">⌕</span>
+        <input type="text" id="ss-search" placeholder="Rechercher une boutique, une ville..." oninput="filterStores()" autocomplete="off">
+      </div>
+      <span class="ss-count" id="ss-count"></span>
+    </div>
+
+    <!-- Filtres par catégorie -->
+    <div class="ss-cats" id="ss-cats">
+      <button class="ss-cat active" onclick="setCatFilter('all',this)">
+        <span class="ss-cat-em">🏪</span>Toutes
+      </button>
+      <!-- Catégories injectées dynamiquement -->
+    </div>
+
+    <!-- Grille boutiques -->
+    <div class="sg" id="sg"></div>
+  </div>
+
+  <!-- Barre fixe bas -->
+  <div class="ss-bottom">
+    <div class="ss-selected-info" id="ss-sel-info">Aucune boutique sélectionnée</div>
+    <button class="ss-btn" id="ss-confirm-btn" onclick="confirmStore()" disabled>Continuer →</button>
+  </div>
+</div>
+
+<!-- Modal carte boutique plein écran -->
+<div id="store-map-modal">
+  <div class="smm-box">
+    <div class="smm-head">
+      <div class="smm-title" id="smm-title">Localisation de la boutique</div>
+      <button class="smm-close" onclick="closeStoreMap()">✕</button>
+    </div>
+    <div class="smm-info" id="smm-info"></div>
+    <div id="store-map-full" style="min-height:360px"></div>
+  </div>
 </div>
 
 <!-- ═══ APP ═══ -->
@@ -685,15 +815,19 @@ function logout() {
 function switchStore() { $('app').style.display='none'; showStoreSelect() }
 
 // ═══ STORE SELECT ═══
+// ═══ SÉLECTION BOUTIQUE ═══
+var _storeFilter = 'all'
+var _storeSearch = ''
+var _storeMaps   = {}
+
 async function showStoreSelect() {
   $('auth').style.display='none'; $('app').style.display='none'
   $('store-sel').style.display='flex'
   const stores = await FM.getStores().then(rows=>rows.filter(s=>s.active!==false).map(FM.adaptStore)).catch(()=>[])
   _stores = stores
   const saved = sessionStorage.getItem('fm_selstore')
-  selStore = stores.find(s=>s.id===saved) || stores[0] || null
+  selStore = stores.find(s=>s.id===saved) || null
 
-  // Si une seule boutique disponible, passer directement sans afficher le sélecteur
   if (stores.length === 1) {
     selStore = stores[0]
     sessionStorage.setItem('fm_selstore', selStore.id)
@@ -702,23 +836,196 @@ async function showStoreSelect() {
     return
   }
 
-  $('sg').innerHTML=stores.length ? stores.map(s=>`
-    <div class="so ${s.id===(selStore?.id)?'sel':''}" onclick="pickStore('${s.id}',this)">
-      <div class="so-chk">✓</div>
+  buildCatFilters(stores)
+  renderStoreGrid()
+  updateSelInfo()
+}
+
+const STORE_TYPE_MAP = {
+  'Épicerie':'🛒','Boucherie':'🥩','Poissonnerie':'🐟','Primeur / Maraîcher':'🥦',
+  'Boulangerie':'🥖','Pâtisserie':'🧁','Café / Snack':'☕','Pharmacie / Parapharmacie':'💊',
+  'Boutique de vêtements':'👗','Cosmétiques / Beauté':'💄','Quincaillerie':'🔧',
+  'Téléphonie / Électronique':'📱','Herboristerie':'🌿','Restaurant':'🍽️','Commerce général':'🏪'
+}
+function getStoreTypeEmoji(t){ return STORE_TYPE_MAP[t]||'🏪' }
+
+function buildCatFilters(stores) {
+  const cats = {}
+  stores.forEach(s => { const t=s.storeType||'Épicerie'; cats[t]=(cats[t]||0)+1 })
+  let html = `<button class="ss-cat ${_storeFilter==='all'?'active':''}" onclick="setCatFilter('all',this)"><span class="ss-cat-em">🏪</span>Toutes</button>`
+  Object.keys(cats).sort().forEach(cat => {
+    const active = _storeFilter===cat ? 'active' : ''
+    html += `<button class="ss-cat ${active}" onclick="setCatFilter(this.dataset.cat,this)" data-cat="${cat}"><span class="ss-cat-em">${getStoreTypeEmoji(cat)}</span>${cat} <span style="opacity:.55">(${cats[cat]})</span></button>`
+  })
+  $('ss-cats').innerHTML = html
+}
+
+function setCatFilter(cat, btn) {
+  _storeFilter = cat
+  document.querySelectorAll('.ss-cat').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  renderStoreGrid()
+}
+
+function filterStores() {
+  _storeSearch = ($('ss-search')?$('ss-search').value:'').trim().toLowerCase()
+  renderStoreGrid()
+}
+
+function renderStoreGrid() {
+  let filtered = _stores
+  if (_storeFilter !== 'all') filtered = filtered.filter(s=>(s.storeType||'Épicerie')===_storeFilter)
+  if (_storeSearch) filtered = filtered.filter(s=>
+    (s.name||'').toLowerCase().includes(_storeSearch)||
+    (s.city||'').toLowerCase().includes(_storeSearch)||
+    (s.storeType||'').toLowerCase().includes(_storeSearch)||
+    (s.addr||'').toLowerCase().includes(_storeSearch)
+  )
+  const countEl=$('ss-count')
+  if(countEl) countEl.textContent=filtered.length+' boutique'+(filtered.length!==1?'s':'')
+  if(!filtered.length){
+    $('sg').innerHTML=`<div class="ss-empty" style="grid-column:1/-1">
+      <div class="ss-empty-icon">🔍</div>
+      <p>Aucune boutique trouvée.</p>
+      <button style="margin-top:1rem;padding:8px 18px;background:none;border:1.5px solid var(--ln);border-radius:var(--rs);font-family:inherit;font-size:13px;cursor:pointer;color:var(--ink2)" onclick="resetFilters()">Effacer les filtres</button>
+    </div>`
+    return
+  }
+  $('sg').innerHTML = filtered.map(s=>buildStoreCard(s)).join('')
+  requestAnimationFrame(()=>{
+    filtered.forEach(s=>{ if(s.latitude&&s.longitude) setTimeout(()=>initMiniMap(s),120) })
+  })
+}
+
+function haversineKm(a,b,c,d){
+  const R=6371,dL=(c-a)*Math.PI/180,dG=(d-b)*Math.PI/180
+  const x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dG/2)**2
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))
+}
+
+function buildStoreCard(s) {
+  const isSelected = selStore&&s.id===selStore.id
+  const hasMap = s.latitude&&s.longitude
+  const addr = [s.addr,s.city,s.country].filter(Boolean).join(', ')
+  let distBadge = ''
+  if(window.FMLocation){
+    const cur=FMLocation.getCurrent()
+    if(cur&&hasMap){
+      const d=haversineKm(cur.lat,cur.lng,s.latitude,s.longitude)
+      distBadge=`<span style="font-size:10px;color:var(--gm);font-weight:500;margin-left:6px">📍 ${d<1?Math.round(d*1000)+'m':d.toFixed(1)+'km'}</span>`
+    }
+  }
+  return `<div class="so${isSelected?' sel':''}" onclick="pickStore('${s.id}',this)" id="so-${s.id}">
+    <div class="so-chk">✓</div>
+    <div class="so-top">
+      <div class="so-type-badge">${getStoreTypeEmoji(s.storeType)} ${s.storeType||'Épicerie'}</div>
       <div class="so-em">${s.emoji||'🏪'}</div>
-      <div class="so-nm">${s.name}</div>
-      <div class="so-ct">${s.city||''}</div>
-    </div>`).join('') : '<div style="color:var(--ink3);font-size:13px">Aucune boutique disponible</div>'
+      <div style="display:flex;align-items:baseline;gap:4px;flex-wrap:wrap">
+        <div class="so-nm">${s.name}</div>${distBadge}
+      </div>
+      <div class="so-ct">${s.city||''}${s.country?', '+s.country:''}</div>
+      ${addr?`<div class="so-addr"><span class="so-addr-icon">📍</span><span>${addr}</span></div>`:''}
+    </div>
+    <div class="so-map-wrap" id="so-map-${s.id}">
+      ${hasMap
+        ?`<div id="so-leaflet-${s.id}" style="width:100%;height:100%"></div>
+          <button class="so-map-btn" onclick="event.stopPropagation();openStoreMap('${s.id}')">Voir sur la carte</button>`
+        :`<div class="so-map-placeholder"><div class="pm-icon">🗺️</div><span>Emplacement non renseigné</span></div>`
+      }
+    </div>
+    <div class="so-footer">
+      <span class="so-open">Ouvert</span>
+      <span class="so-phone">${s.ownerPhone||s.whatsappPhone||''}</span>
+    </div>
+  </div>`
 }
+
+function initMiniMap(store) {
+  const cid='so-leaflet-'+store.id
+  const el=document.getElementById(cid)
+  if(!el||_storeMaps[store.id]) return
+  if(!window.L){ loadLeafletForStores(()=>initMiniMap(store)); return }
+  try{
+    const map=L.map(cid,{center:[store.latitude,store.longitude],zoom:15,zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,touchZoom:false})
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map)
+    const icon=L.divIcon({html:`<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;background:#1B4332;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:13px;transform:rotate(-45deg)"><span style="transform:rotate(45deg)">${store.emoji||'🏪'}</span></div>`,iconSize:[30,30],iconAnchor:[15,30],className:''})
+    L.marker([store.latitude,store.longitude],{icon}).addTo(map)
+    _storeMaps[store.id]=map
+    setTimeout(()=>map.invalidateSize(),200)
+  }catch(e){}
+}
+
+var _leafletLoading=false, _leafletCbs=[]
+function loadLeafletForStores(cb){
+  if(window.L){cb();return}
+  _leafletCbs.push(cb)
+  if(_leafletLoading) return
+  _leafletLoading=true
+  if(!document.getElementById('fm-l-css')){const l=document.createElement('link');l.id='fm-l-css';l.rel='stylesheet';l.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(l)}
+  const s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+  s.onload=()=>{_leafletCbs.forEach(fn=>fn());_leafletCbs=[]}
+  document.head.appendChild(s)
+}
+
+function openStoreMap(storeId) {
+  const s=_stores.find(x=>x.id===storeId); if(!s||!s.latitude) return
+  $('smm-title').textContent=s.name
+  $('smm-info').innerHTML=`
+    <div class="smm-info-row"><span>📍</span><span>${[s.addr,s.city,s.country].filter(Boolean).join(', ')||'Adresse non renseignée'}</span></div>
+    ${s.storeType?`<div class="smm-info-row"><span>${getStoreTypeEmoji(s.storeType)}</span><span>${s.storeType}</span></div>`:''}
+    ${s.ownerPhone?`<div class="smm-info-row"><span>📞</span><span>${s.ownerPhone}</span></div>`:''}
+    ${s.whatsappPhone&&s.whatsappPhone!==s.ownerPhone?`<div class="smm-info-row"><span>💬</span><span>WhatsApp: ${s.whatsappPhone}</span></div>`:''}
+  `
+  $('store-map-modal').classList.add('open')
+  document.body.style.overflow='hidden'
+  setTimeout(()=>{
+    const build=()=>{
+      if(window._fullStoreMap){try{window._fullStoreMap.remove()}catch(e){}}
+      const map=L.map('store-map-full',{center:[s.latitude,s.longitude],zoom:16,zoomControl:true,attributionControl:false})
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map)
+      const icon=L.divIcon({html:`<div style="width:42px;height:42px;border-radius:50% 50% 50% 0;background:#1B4332;border:3px solid white;box-shadow:0 3px 12px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:18px;transform:rotate(-45deg)"><span style="transform:rotate(45deg)">${s.emoji||'🏪'}</span></div>`,iconSize:[42,42],iconAnchor:[21,42],className:''})
+      L.marker([s.latitude,s.longitude],{icon}).addTo(map).bindPopup(`<b>${s.name}</b><br><small>${s.storeType||''}</small>`).openPopup()
+      L.circle([s.latitude,s.longitude],{radius:30,color:'#40916C',fillColor:'#40916C',fillOpacity:.1,weight:1}).addTo(map)
+      window._fullStoreMap=map
+      setTimeout(()=>map.invalidateSize(),100)
+    }
+    window.L?build():loadLeafletForStores(build)
+  },80)
+}
+
+function closeStoreMap(){$('store-map-modal').classList.remove('open');document.body.style.overflow=''}
+
+function resetFilters(){
+  _storeFilter='all'; _storeSearch=''
+  if($('ss-search')) $('ss-search').value=''
+  document.querySelectorAll('.ss-cat').forEach((b,i)=>b.classList.toggle('active',i===0))
+  renderStoreGrid()
+}
+
 function pickStore(id, el) {
-  document.querySelectorAll('.so').forEach(o=>o.classList.remove('sel')); el.classList.add('sel')
+  document.querySelectorAll('.so').forEach(o=>o.classList.remove('sel'))
+  el.classList.add('sel')
   selStore=_stores.find(s=>s.id===id)||null
+  updateSelInfo()
 }
-async function confirmStore() {
-  // Auto-sélectionner le premier store si aucun n'est sélectionné
-  if(!selStore && _stores.length) selStore = _stores[0]
+
+function updateSelInfo(){
+  const info=$('ss-sel-info'), btn=$('ss-confirm-btn')
+  if(selStore){
+    if(info) info.innerHTML=`Sélectionnée : <strong>${selStore.name}</strong>`
+    if(btn) btn.disabled=false
+  } else {
+    if(info) info.textContent='Aucune boutique sélectionnée'
+    if(btn) btn.disabled=true
+  }
+}
+
+async function confirmStore(){
+  if(!selStore&&_stores.length) selStore=_stores[0]
   if(!selStore) return
-  sessionStorage.setItem('fm_selstore', selStore.id)
+  sessionStorage.setItem('fm_selstore',selStore.id)
+  Object.values(_storeMaps).forEach(m=>{try{m.remove()}catch(e){}})
+  _storeMaps={}
   $('store-sel').style.display='none'
   await bootApp()
 }
