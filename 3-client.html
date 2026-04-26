@@ -199,46 +199,43 @@ nav{background:var(--wh);border-bottom:1px solid var(--ln);position:sticky;top:0
 .cc.active{background:var(--gr);border-color:var(--gr);color:white}
 
 /* PRODUCTS GRID */
-.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
-.pcard{background:var(--wh);border-radius:12px;cursor:pointer;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-.pcard:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(27,67,50,.14)}
-.pc-img{position:relative;height:130px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,var(--gf) 0%,var(--gp) 100%)}
-.pc-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s}
-.pcard:hover .pc-img img{transform:scale(1.06)}
-.pc-img-emoji{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.6rem;transition:transform .35s}
-.pcard:hover .pc-img-emoji{transform:scale(1.1)}
-.pc-badge-new{position:absolute;top:8px;left:8px;background:var(--gr);color:white;font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:20px;pointer-events:none}
-.pc-badge-promo{position:absolute;top:8px;right:8px;background:#E65100;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;pointer-events:none}
-.pc-body{padding:.75rem .875rem .875rem;display:flex;flex-direction:column;flex:1}
-.pc-cat{font-size:9px;font-weight:700;color:var(--gl);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
-.pc-nm{font-size:13px;font-weight:600;margin-bottom:3px;line-height:1.3;color:var(--ink)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px;background:var(--ln);border:1px solid var(--ln);border-radius:var(--r);overflow:hidden}
+.pcard{background:var(--wh);padding:1.25rem;cursor:pointer;transition:background .15s;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.pcard:hover{background:var(--gf)}
+.pc-em{font-size:2.2rem;margin-bottom:.75rem}
+.pc-cat{font-size:10px;font-weight:600;color:var(--gl);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+.pc-nm{font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.3}
 .new-tag{font-size:9px;background:var(--gr);color:white;border-radius:3px;padding:1px 5px;margin-left:5px;vertical-align:middle;font-weight:600}
-.pc-desc{font-size:11px;color:var(--ink3);font-weight:300;line-height:1.4;margin-bottom:8px;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.pc-ft{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.pc-pr{font-family:'Cormorant Garamond',serif;font-size:1.15rem}
+.pc-desc{font-size:12px;color:var(--ink3);font-weight:300;line-height:1.4;margin-bottom:12px;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc-ft{display:flex;align-items:center;justify-content:space-between}
+.pc-pr{font-family:'Cormorant Garamond',serif;font-size:1.2rem}
 .pc-pr small{font-family:'Outfit',sans-serif;font-size:10px;color:var(--ink3);font-weight:300}
-.stag{font-size:9px;font-weight:600;padding:2px 7px;border-radius:3px}
+.stag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px}
 .st-ok{background:#EBFAF2;color:#1B7A4F}
 .st-lo{background:var(--ob);color:var(--or)}
 .st-out{background:var(--rb);color:var(--red)}
-.fm-stats{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+/* ── Realtime counters ── */
+.fm-stats{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--ln2)}
 .fm-views{font-size:10px;color:var(--ink4);font-weight:500;transition:color .3s}
 .fm-sales{font-size:10px;color:var(--ink4);font-weight:500}
-.fm-views::before{content:'\1F441 ';font-size:9px}
-.fm-sales::before{content:'\1F6CD ';font-size:9px}
-.fm-trend{display:none;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#E65100;background:rgba(255,255,255,.93);border:1px solid #FFB74D;border-radius:20px;padding:2px 7px;position:absolute;bottom:8px;left:8px;animation:fm-pulse 1.8s ease-in-out infinite;backdrop-filter:blur(4px)}
+.fm-views::before{content:'👁 ';font-size:9px}
+.fm-sales::before{content:'🛍 ';font-size:9px}
+/* Trend badge */
+.fm-trend{display:none;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#E65100;background:#FFF3E0;border:1px solid #FFB74D;border-radius:20px;padding:2px 7px;position:absolute;top:8px;right:8px;animation:fm-pulse 1.8s ease-in-out infinite}
 .fm-trend-on{display:flex}
 @keyframes fm-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.85;transform:scale(1.04)}}
-.fm-hover-stats{position:absolute;top:0;left:0;right:0;height:130px;background:linear-gradient(to bottom,transparent 30%,rgba(27,67,50,.85) 100%);padding:.5rem .75rem;display:flex;flex-direction:column;justify-content:flex-end;opacity:0;transition:opacity .2s;pointer-events:none}
+/* Hover stats overlay */
+.fm-hover-stats{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(27,67,50,.92) 0%,transparent 100%);padding:.75rem 1rem .5rem;opacity:0;transition:opacity .25s;pointer-events:none;border-radius:0 0 var(--r) var(--r)}
 .pcard:hover .fm-hover-stats{opacity:1}
-.fm-hs-row{display:flex;justify-content:space-between;align-items:center;margin-top:2px}
-.fm-hs-label{font-size:9px;color:rgba(255,255,255,.8);font-weight:500}
-.fm-hs-val{font-size:11px;color:white;font-weight:700}
+.fm-hs-row{display:flex;justify-content:space-between;align-items:center}
+.fm-hs-label{font-size:10px;color:rgba(255,255,255,.7);font-weight:500}
+.fm-hs-val{font-size:12px;color:white;font-weight:700}
+/* Pulse animé quand un compteur monte */
 @keyframes fm-countup{0%{color:var(--gr)}60%{color:var(--gr)}100%{color:var(--ink4)}}
 .fm-views.counting{animation:fm-countup .6s ease-out forwards}
-.add-btn{padding:7px;border:none;border-radius:7px;background:var(--gr);color:white;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s;width:100%}
-.add-btn:hover:not(:disabled){background:var(--gm)}
-.add-btn:disabled{background:var(--ln);color:var(--ink4);cursor:not-allowed}
+.add-btn{margin-top:10px;padding:7px;border:1px solid var(--ln);border-radius:var(--rs);background:transparent;color:var(--ink2);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;width:100%}
+.add-btn:hover:not(:disabled){background:var(--gr);border-color:var(--gr);color:white}
+.add-btn:disabled{color:var(--ink4);cursor:not-allowed}
 
 /* MODAL */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
@@ -414,9 +411,7 @@ table{min-width:450px}
   .vn{max-width:calc(100vw - 1rem);right:.5rem;left:.5rem;top:auto;bottom:5rem}
   .ss-title{font-size:1.4rem}
   .sg{grid-template-columns:1fr}
-  .pgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-  .pc-img{height:110px}
-  .pc-body{padding:.625rem .75rem .75rem}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
   .a-right{padding:1.25rem}
   .modal{border-radius:16px 16px 0 0;max-height:96vh;margin-top:auto}
   .mo,.odov{align-items:flex-end;padding:0}
@@ -426,12 +421,12 @@ table{min-width:450px}
   th,td{padding:8px 6px!important}
   .fm-hover-stats{display:none!important}
   .fm-stats{gap:6px}
-
+  .pcard{padding:1rem}
+  .pc-em{font-size:1.8rem;margin-bottom:.5rem}
   .cbox,.sum-box,.del-box{padding:1rem}
 }
 @media(max-width:380px){
-  .pgrid{grid-template-columns:1fr 1fr;gap:6px}
-  .pc-img{height:95px}
+  .pgrid{grid-template-columns:1fr 1fr}
   .pcard{padding:.75rem}
   .pc-nm{font-size:13px}
   .pc-pr{font-size:1rem}
@@ -1207,62 +1202,48 @@ function renderCat() {
   let f=prods
   if(q) f=f.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q))
   if(activeCat!=='all') f=f.filter(p=>p.category===activeCat)
-
-  const _fmt = window.FMRealtime ? FMRealtime.fmt.bind(FMRealtime) : n=>Math.floor(n||0).toLocaleString('fr-FR')
-
   $('pgrid').innerHTML=f.length?f.map(p=>{
-    const sc=p.stock===0?'st-out':p.stock<10?'st-lo':'st-ok'
-    const st=p.stock===0?'Rupture':p.stock<10?p.stock+' restants':'En stock'
+    const sc=p.stock===0?'st-out':p.stock<10?'st-lo':'st-ok', st=p.stock===0?'Rupture':p.stock<10?p.stock+' restants':'En stock'
     const views = window.FMRealtime ? FMRealtime.getViews(p.id) : (p.views||0)
     const sales = window.FMRealtime ? FMRealtime.getSales(p.id) : (p.salesCount||0)
-    const promoVal = p.promo && p.promo < p.price ? p.promo : null
-    const discPct  = promoVal ? Math.round((1-promoVal/p.price)*100) : 0
-
-    const priceHtml = promoVal
-      ? `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-           <span style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--or)">${promoVal.toLocaleString('fr-FR')} <small style="font-family:Outfit,sans-serif;font-size:10px;font-weight:300">FCFA</small></span>
-           <span style="text-decoration:line-through;color:var(--ink4);font-size:11px">${p.price.toLocaleString('fr-FR')}</span>
+    const priceHtml = p.promo
+      ? `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+           <span style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;color:var(--or)">${p.promo.toLocaleString('fr-FR')} <small style="font-family:Outfit,sans-serif;font-size:10px;font-weight:300">FCFA</small></span>
+           <span style="text-decoration:line-through;color:var(--ink4);font-size:12px">${p.price.toLocaleString('fr-FR')}</span>
+           <span style="background:#FFF3E0;color:#E65100;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.3px">-${Math.round((1-p.promo/p.price)*100)}%</span>
          </div>`
       : `<div class="pc-pr">${p.price.toLocaleString('fr-FR')} <small>FCFA</small></div>`
-
-    return `<div class="pcard" data-pid="${p.id}" onclick="openProd(${p.id})">
-
-      <div class="pc-img">
-        ${p.img
-          ? `<img src="${p.img}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="pc-img-emoji" style="display:none">${p.emoji||''}</div>`
-          : `<div class="pc-img-emoji">${p.emoji||''}</div>`
-        }
-        ${p.new ? '<div class="pc-badge-new">Nouveau</div>' : ''}
-        ${promoVal ? `<div class="pc-badge-promo">-${discPct}%</div>` : ''}
-        <div class="fm-trend">\uD83D\uDD25 Tendance</div>
-        <div class="fm-hover-stats">
-          <div class="fm-hs-row"><span class="fm-hs-label">Vues</span><span class="fm-hs-val fm-hs-views">${_fmt(views)}</span></div>
-          <div class="fm-hs-row"><span class="fm-hs-label">Ventes</span><span class="fm-hs-val fm-hs-sales">${_fmt(sales)}</span></div>
+    return`<div class="pcard" data-pid="${p.id}" onclick="openProd(${p.id})">
+      <div class="fm-trend">🔥 Tendance</div>
+      <div class="pc-em">${p.emoji}</div>
+      <div class="pc-cat">${p.category}</div>
+      <div class="pc-nm">${p.name}${p.new?'<span class="new-tag">NOUVEAU</span>':''}</div>
+      <div class="pc-desc">${p.desc}</div>
+      <div class="pc-ft">${priceHtml}<span class="stag ${sc}">${st}</span></div>
+      <div class="fm-stats">
+        <span class="fm-views">${FMRealtime.fmt(views)} vues</span>
+        <span class="fm-sales">${FMRealtime.fmt(sales)} ventes</span>
+      </div>
+      <button class="add-btn" ${p.stock===0?'disabled':''} onclick="event.stopPropagation();qadd(${p.id})">${p.stock===0?'Indisponible':'+ Panier'}</button>
+      <div class="fm-hover-stats">
+        <div class="fm-hs-row">
+          <span class="fm-hs-label">👁 Vues totales</span>
+          <span class="fm-hs-val">${FMRealtime.fmt(views)}</span>
+        </div>
+        <div class="fm-hs-row" style="margin-top:3px">
+          <span class="fm-hs-label">🛍 Fois commandé</span>
+          <span class="fm-hs-val">${FMRealtime.fmt(sales)}</span>
         </div>
       </div>
-
-      <div class="pc-body">
-        <div class="pc-cat">${p.category}</div>
-        <div class="pc-nm">${p.name}</div>
-        <div class="pc-desc">${p.desc||''}</div>
-        <div class="pc-ft">${priceHtml}<span class="stag ${sc}">${st}</span></div>
-        <div class="fm-stats">
-          <span class="fm-views">${_fmt(views)} vues</span>
-          <span class="fm-sales">${_fmt(sales)} ventes</span>
-        </div>
-        <button class="add-btn" ${p.stock===0?'disabled':''} onclick="event.stopPropagation();qadd(${p.id})">
-          ${p.stock===0?'Indisponible':'+ Panier'}
-        </button>
-      </div>
-
     </div>`
-  }).join('') : '<div style="padding:4rem;text-align:center;color:var(--ink3);grid-column:1/-1">Aucun produit trouv\u00e9</div>'
+  }).join('') : '<div style="padding:4rem;text-align:center;color:var(--ink3);grid-column:1/-1">Aucun produit trouvé</div>'
 
+  // Animer les nouvelles cartes après rendu
   if (window.FMRealtime) {
     requestAnimationFrame(function() {
       document.querySelectorAll('#pgrid .pcard').forEach(function(card) {
         if (!card.dataset.appeared) {
-          card.dataset.appeared='1'
+          card.dataset.appeared = '1'
           FMRealtime.animateCardAppear(card)
         }
       })
@@ -1412,7 +1393,8 @@ function sendWhatsAppToVendor(order) {
       order.addr ? `📍 *Adresse :* ${order.addr}` : '',
       order.note ? `📝 *Note :* ${order.note}` : '',
       ``,
-      `_Répondez sur FreshMart pour confirmer._`
+      `🌐 *Gérer sur :* https://easymarkets.netlify.app`,
+      `_Répondez sur EasyMarket pour confirmer._`
     ].filter(l=>l!==undefined).join('\n')
 
     const url = `https://wa.me/${num}?text=${encodeURIComponent(lines)}`
